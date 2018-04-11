@@ -21,7 +21,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.0.0"
+#define __VERSION__	"2.1.0"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
@@ -35,7 +35,7 @@ bool STT_FAN = false;
 bool STT_LIGHT = false;
 bool STT_LED_STATUS = false;
 
-
+extern void updateTimeStamp(unsigned long interval);
 String getID() {
 	byte mac[6];
 	WiFi.macAddress(mac);
@@ -147,12 +147,14 @@ void setup()
 
 	Serial.print("ID = ");
 	Serial.println(HubID);
-	mqtt_init();
+	updateTimeStamp(0);
+	mqtt_init(); 
 }
 
 void loop()
 {
 	/* add main program code here */
+	updateTimeStamp(3600000);
 	mqtt_loop();
 	serial_command_handle();
 	button_handle();

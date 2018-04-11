@@ -54,7 +54,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 		//DEBUG.print(F("Command ID "));
 		//DEBUG.print(CMD_ID);
 		//DEBUG.print(F(" was excuted."));
-		return;
+		static bool firsControlFromRetain = true;
+		if (!firsControlFromRetain) {
+			DEBUG.println(F("Skipped\r\n"));
+			return;
+		}
+		firsControlFromRetain = false;
 	}
 	else {
 		isCommandFromApp = true;
@@ -165,7 +170,6 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	hc595_digitalWrite(LED_STATUS, OFF);
 
 	DEBUG.println(mqtt_Message);
-	DEBUG.println();
 
 	//control pump1, light, fan
 	if (topicStr == String("Mushroom/Commands/" + HubID))

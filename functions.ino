@@ -54,6 +54,7 @@ bool smart_config() {
 	}
 	return false;
 }
+
 void wifi_init() {
 	//WiFi.disconnect();
 	WiFi.setAutoConnect(true);
@@ -93,6 +94,99 @@ void wifi_init() {
 	}
 }
 
+String http_request(String host, uint16_t port = 80, String url = "/") {
+	Serial.println("\r\nGET " + host + ":" + String(port) + url);
+	WiFiClient client;
+	client.setTimeout(100);
+	if (!client.connect(host.c_str(), port)) {
+		Serial.println("connection failed");
+		return "";
+	}
+	client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+		"Host: " + host + "\r\n" +
+		"Connection: close\r\n\r\n");
+	unsigned long timeout = millis();
+	while (client.available() == 0) {
+		if (millis() - timeout > 2000) {
+			Serial.println(">>> Client Timeout !");
+			client.stop();
+			return "";
+		}
+		delay(1);
+	}
+
+	// Read all the lines of the reply from server and print them to Serial
+	//while (client.available()) {
+	//	String line = client.readStringUntil('\r');
+	//	Serial.print(line);
+	//}
+	//Serial.println();
+	//Serial.println();
+	String body;
+	if (client.available()) {
+		body = client.readString();
+		int pos_body_begin = body.indexOf("\r\n\r\n");
+		if (pos_body_begin > 0) {
+			body = body.substring(pos_body_begin + 4);
+		}
+	}
+	client.stop();
+	body.trim();
+	return body;
+}
+
+void updateTimeStamp(unsigned long interval = 0) {
+	delay(1);
+	static unsigned long t_pre_update = 0;
+	static bool wasSync = false;
+	if (interval == 0) {
+		{
+			Serial.println(F("Update timestamp"));
+			String strTimeStamp = http_request("date.jsontest.com");
+			Serial.println(strTimeStamp);
+			DynamicJsonBuffer timestamp(500);
+			JsonObject& jsTimeStamp = timestamp.parseObject(strTimeStamp);
+			if (jsTimeStamp.success()) {
+				String tt = jsTimeStamp["milliseconds_since_epoch"].asString();
+				tt = tt.substring(0, tt.length() - 3);
+				long ts = tt.toInt();
+				if (ts > 1000000000) {
+					t_pre_update = millis();
+					wasSync = true;
+					setTime(ts);
+					adjustTime(7 * SECS_PER_HOUR);
+					Serial.println(F("Time Updated\r\n"));
+					return;
+				}
+			}
+		}
+
+		String strTimeStamp = http_request("mic.duytan.edu.vn", 88, "/api/GetUnixTime");
+		Serial.println(strTimeStamp);
+		DynamicJsonBuffer timestamp(500);
+		JsonObject& jsTimeStamp = timestamp.parseObject(strTimeStamp);
+		if (jsTimeStamp.success()) {
+			time_t ts = String(jsTimeStamp["UNIX_TIME"].asString()).toInt();
+			if (ts > 1000000000) {
+				t_pre_update = millis();
+				wasSync = true;
+				setTime(ts);
+				adjustTime(7 * SECS_PER_HOUR);
+				Serial.println(F("Time Updated\r\n"));
+				return;
+			}
+		}
+	}
+	else {
+		if ((millis() - t_pre_update) > interval) {
+			updateTimeStamp();
+		}
+	}
+	if (!wasSync) {
+		updateTimeStamp();
+	}
+	delay(1);
+}
 void update_sensor(unsigned long period) {
 	//update sensors data to server every period milli seconds
 	static unsigned long preMillis = millis();
@@ -239,7 +333,7 @@ void send_status_to_server(bool pump1 = true, bool fan = true, bool light = true
 	jsStatus["MIST"] = stt_pump1 ? on_ : off_;
 	jsStatus["FAN"] = stt_fan ? on_ : off_;
 	jsStatus["LIGHT"] = stt_light ? on_ : off_;
-	jsStatus["CMD_ID"] = "HW-" + String(millis());;
+	jsStatus["CMD_ID"] = "HW-" + String(now());;
 
 	String jsStatusStr;
 	jsStatusStr.reserve(150);
