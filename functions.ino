@@ -240,13 +240,22 @@ void hc595_digitalWrite(int pin, bool status) {
 	static byte pre_output = -1;
 
 	//8bit: 0 - PUMP1 - PUMP2 - WATER_IN - FAN - LIGHT - LED_STATUS - 0
+	byte out;
 	switch (pin)
 	{
 	case PUMP1:
 	case PUMP2:
 	case WATER_IN:
 	case FAN:
-	case LIGHT:
+	case LIGHT:		
+		out = 0x01 << pin;
+		if (status) {
+			output |= out;
+		}
+		else {
+			output &= ~out;
+		}
+		break;
 	case LED_STATUS:
 		//if (status) {
 		//  output = output | 0b01000000;
@@ -254,9 +263,9 @@ void hc595_digitalWrite(int pin, bool status) {
 		//else {
 		//  output = output & 0b10111111;
 		//}
-		byte out;
+
 		out = 0x01 << pin;
-		if (status) {
+		if (!status) { //LED hiện tại alway off, on when signal. -> alway on, off when signal
 			output |= out;
 		}
 		else {

@@ -19,6 +19,9 @@
     <None Include="button.ino" />
     <None Include="functions.ino" />
     <None Include="oled.ino" />
+    <None Include="SmartMushroomV1.pdf">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.MushroomV2.vsarduino.h">

@@ -21,7 +21,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.0"
+#define __VERSION__	"2.1.1"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
@@ -117,6 +117,7 @@ void setup()
 	control(PUMP1, false, false);
 	control(FAN, false, false);
 	control(LIGHT, false, false);
+	control(LED_STATUS, false, false);
 
 	Serial.println("HID=" + HubID);
 

@@ -35,8 +35,8 @@ const int DHTPIN = D2;// 16;  //??c d? li?u t? DHT11 ? chân 2 trên m?ch Arduino
 #endif // DHT
 
 #ifdef SHT
-#define SHT_dataPin  D1
-#define SHT_clockPin D2
+#define SHT_dataPin  D2
+#define SHT_clockPin D1
 #endif // SHT
 //===============================
 

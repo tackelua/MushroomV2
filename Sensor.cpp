@@ -42,6 +42,8 @@ float readTemp() {
 	ulong t = millis();
 	float temp = sht.readTemperatureC(); //change waitForResultSHT loop from 100 times to 10 times
 	DEBUG.print(F("Read Temp: "));
+	DEBUG.print(temp);
+	DEBUG.print(" in ");
 	DEBUG.print(millis() - t);
 	DEBUG.println(F("ms"));
 	return (temp < 0.01f ? -1.0f : temp);
