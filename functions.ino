@@ -188,6 +188,15 @@ void updateTimeStamp(unsigned long interval = 0) {
 	delay(1);
 }
 void update_sensor(unsigned long period) {
+	//check waterEmpty nếu thay đổi thì update ngay lập tức
+	static bool waterEmpty_old = false;
+	static bool waterEmpty_new;
+	waterEmpty_new = !digitalRead(PININ_WATER_L);
+	if (waterEmpty_new != waterEmpty_old) {
+		waterEmpty_old = waterEmpty_new;
+		update_sensor(0);
+	}
+
 	//update sensors data to server every period milli seconds
 	static unsigned long preMillis = millis();
 	if ((millis() - preMillis) > period) {
@@ -401,7 +410,7 @@ void auto_control() {
 		delay(1);
 	}
 
-	//=================================================================================
+	//==================================================================================================================================
 	/*
 	float exp = 0.01f;
 	//phun suong tu tat sau 2 phut
@@ -438,7 +447,7 @@ void auto_control() {
 		send_status_to_server();
 	}
 	*/
-	//=================================================
+	//==================================================================================================================================
 
 	////auto turn off pump1 after 15 min
 	//if (stt_pump1) {

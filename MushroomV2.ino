@@ -21,7 +21,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.1"
+#define __VERSION__	"2.1.2"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 

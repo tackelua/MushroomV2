@@ -117,6 +117,9 @@
     <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Sensor.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Auto Mushroom.txt" />
+  </ItemGroup>
   <PropertyGroup>
     <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
   </PropertyGroup>
