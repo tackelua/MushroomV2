@@ -256,7 +256,7 @@ void hc595_digitalWrite(int pin, bool status) {
 	case PUMP2:
 	case WATER_IN:
 	case FAN:
-	case LIGHT:		
+	case LIGHT:
 		out = 0x01 << pin;
 		if (status) {
 			output |= out;
@@ -267,11 +267,11 @@ void hc595_digitalWrite(int pin, bool status) {
 		break;
 	case LED_STATUS:
 		//if (status) {
-		//  output = output | 0b01000000;
-		//}
-		//else {
-		//  output = output & 0b10111111;
-		//}
+//  output = output | 0b01000000;
+//}
+//else {
+//  output = output & 0b10111111;
+//}
 
 		out = 0x01 << pin;
 		if (!status) { //LED hiện tại alway off, on when signal. -> alway on, off when signal
@@ -284,7 +284,7 @@ void hc595_digitalWrite(int pin, bool status) {
 	default:
 		break;
 	}
-	
+
 	if (output != pre_output) {
 		pre_output = output;
 		digitalWrite(HC595_STCP, LOW);
@@ -301,15 +301,11 @@ void send_status_to_server(bool pump1, bool fan, bool light);
 bool control(int pin, bool status, bool update_to_server = false);
 bool control(int pin, bool status, bool update_to_server) { //status = true -> ON; false -> OFF
 	bool pin_change = false;
-	bool pump1_change = false;
-	bool fan_change = false;
-	bool light_change = false;
 
 	if ((pin == PUMP1) && (stt_pump1 != status)) {
 		t_pump1_change = millis();
 		stt_pump1 = status;
 		pin_change = true;
-		pump1_change = true;
 		DEBUG.print(F("MIST: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -317,7 +313,6 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 		t_fan_change = millis();
 		stt_fan = status;
 		pin_change = true;
-		fan_change = true;
 		DEBUG.print(F("FAN: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -325,7 +320,6 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 		t_light_change = millis();
 		stt_light = status;
 		pin_change = true;
-		light_change = true;
 		DEBUG.print(F("LIGHT: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -333,7 +327,7 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 	if (pin_change) {
 		hc595_digitalWrite(pin, status ? ON : OFF);
 		if (update_to_server) {
-			send_status_to_server(pump1_change, fan_change, light_change);
+			send_status_to_server(stt_pump1, stt_fan, stt_light);
 		}
 	}
 	return pin_change;
@@ -365,6 +359,29 @@ bool skip_auto_fan = false;
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
+
+	//+ PUMP1 tự tắt sau 1.5 phút
+	if ((millis() - t_pump1_change) > 3 * 30000) {
+		skip_auto_light = false;
+		if (stt_pump1) {
+			control(PUMP1, false, true);
+		}
+	}
+	//+ FAN tự tắt sau 1 tiếng
+	if ((millis() - t_fan_change) > (1 * 1000 * SECS_PER_HOUR)) {
+		skip_auto_fan = false;
+		if (stt_fan) {
+			control(FAN, false, true);
+		}
+	}
+	//+ LIGHT tự tắt sau 3 tiếng
+	if ((millis() - t_light_change) > (3 * 1000 * SECS_PER_HOUR)) {
+		skip_auto_light = false;
+		if (stt_light) {
+			control(LIGHT, false, true);
+		}
+	}
+	//==============================================================
 	//1/ Bật tắt đèn
 	if (!skip_auto_light) {
 		if (light < LIGHT_MIN) {
@@ -375,138 +392,31 @@ void auto_control() {
 		}
 	}
 	//-------------------
-
+	return;
 	//2. Bật tắt phun sương
-	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h, mỗi lần 4 phút
-	if (((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() < 5)) { //check in 5secs
+	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
+	if (!skip_auto_pump1 && ((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0)) {
 		skip_auto_pump1 = true;
-		control(PUMP1, true, true);
-	}
-	if (((hour() == 6) || (hour() == 16)) && (minute() == 4) && (second() < 5) && skip_auto_pump1) {
-		skip_auto_pump1 = false;
-		control(PUMP1, false, true);
+		control(PUMP1, true, false);
+		control(FAN, true, true);
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
+	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
+		control(PUMP1, true, false);
+		control(FAN, true, true);
+	}
+	//-------------------
 
-	if (((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
-		if (control(PUMP1, true, false)) {
-			control(FAN, true, true);
-		}
-		//phun 3 phút
-		if (((millis() - t_pump1_change) > 3 * 60000) && stt_pump1 && !skip_auto_pump1) {
-			control(PUMP1, false, true);
-		}
-		//-------------------
-
-		//c. Bật tắt quạt
-		if (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX) && ((millis() - t_pump1_change) < 3600000) && !stt_pump1) {
-			control(LIGHT, true, true);
-		}
-
-		if (!(((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) || (((millis() - t_pump1_change) < 3600000) && stt_pump1)) {
-			control(LIGHT, false, true);
-		}
-		delay(1);
+	//c. Bật tắt quạt
+	if (!skip_auto_fan && ((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX) && ((millis() - t_pump1_change) < 3600000) && !stt_pump1) {
+		control(FAN, true, true);
 	}
 
-	//==================================================================================================================================
-	/*
-	float exp = 0.01f;
-	//phun suong tu tat sau 2 phut
-	//nếu nhiệt độ trong miền cho phép thì tắt quạt
-	if (stt_pump1 && ((millis() - t_pump1_change) > 120000) && ((temp + 1.0f) > exp)) {
-		control(PUMP1, false);
-		if ((TEMP_MIN < int(temp)) && (int(temp) < TEMP_MAX)) {
-			control(FAN, false);
-		}
-		send_status_to_server();
+	if (!skip_auto_fan && !(((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) || (((millis() - t_pump1_change) < 3600000) && stt_pump1) && skip_auto_fan) {
+		control(FAN, false, true);
 	}
-
-	//fan tu tat sau 1 tieng
-	if (stt_fan && ((millis() - t_fan_change) > 3600000)) {
-		control(FAN, false);
-		send_status_to_server();
-	}
-
-	//if (!library) {
-	//	return;
-	//}
-
-	//phun suong tu bat neu humi nho va 1 tieng truoc ko dieu khien | Khi phun thì quạt sẽ bật đồng thời
-	if ((int(humi) < HUMI_MIN) && (!stt_pump1) && ((millis() - t_pump1_change) > 3600000) && ((humi + 1.0f) > exp)) {
-		DEBUG.println("#AUTO PUMP1 ON, FAN ON");
-		control(PUMP1, true);
-		control(FAN, true);
-		send_status_to_server();
-	}
-
-	//fan tự bật sau 2 tiếng hoặc nhiệt độ > TEMP_MAX hoặc humi > HUMI_MAX
-	if ((!stt_fan) && ((int(temp) > TEMP_MAX) || (humi > HUMI_MAX) || ((millis() - t_fan_change) > 7200000)) && ((temp + 1.0f) > exp)) {
-		control(FAN, true);
-		send_status_to_server();
-	}
-	*/
-	//==================================================================================================================================
-
-	////auto turn off pump1 after 15 min
-	//if (stt_pump1) {
-	//	if ((millis() - t_pump1_change) > (5 * 60000)) {
-	//		control(PUMP1, false, true);
-	//		autoControl = false;
-	//		t_last_autoControl_off = millis();
-	//	}
-	//}
-
-	//if ((humi < 64) && !stt_pump1) {
-	//	control(PUMP1, true, true);
-	//}
-
-	//return;
-	//if (!library) {
-	//	return;
-	//}
-
-	//{
-	//	static unsigned long t_period_check = millis();
-	//	static unsigned long t_pump1_on = millis();
-	//	if ((millis() - t_period_check) > 5 * 60 * 1000) { //mỗi 30min check 1 lần
-	//		if (int(temp) > TEMP_MAX) {
-	//			t_pump1_on = millis();
-	//			control(PUMP1, true);
-	//			control(FAN, true);
-	//		}
-	//	}
-	//	if (stt_pump1) {
-	//		if ((millis() - t_pump1_on) > 10 * 60 * 1000) {
-	//			control(PUMP1, false);
-	//		}
-	//	}
-	//}
-	//if (int(temp) < TEMP_MAX - 2) {
-	//	control(PUMP1, false);
-	//	control(FAN, false);
-	//}
-
-	//if (int(humi) < HUMI_MIN) {
-	//	control(PUMP1, true);
-	//}
-	//else if (int(humi) > HUMI_MAX) {
-	//	control(PUMP1, false);
-	//}
-
-	//if (timeStr.indexOf("06:") > -1) {
-	//	if (light < LIGHT_MIN) {
-	//		control(LIGHT, true);
-	//	}
-	//	if (light > LIGHT_MAX) {
-	//		control(LIGHT, false);
-	//	}
-	//}
-	//if ((timeStr == "07:00:00") || (timeStr == "19:00:00")) {
-	//	control(LIGHT, false);
-	//	delay(1000);
-	//}
+	delay(1);
 }
 
 void updateFirmware(String url) {
@@ -551,15 +461,16 @@ void control_handle(String cmd) {
 		control(LIGHT, true, true);
 	}
 	if (cmd.indexOf("LIGHT OFF") > -1) {
-		skip_auto_light = false;
+		skip_auto_light = true;
 		control(LIGHT, false, true);
 	}
 
 	if (cmd.indexOf("MIST ON") > -1) {
-		skip_auto_fan = false;
+		skip_auto_pump1 = true;
 		control(PUMP1, true, true);
 	}
 	if (cmd.indexOf("MIST OFF") > -1) {
+		skip_auto_pump1 = true;
 		control(PUMP1, false, true);
 	}
 
@@ -568,7 +479,7 @@ void control_handle(String cmd) {
 		control(FAN, true, true);
 	}
 	if (cmd.indexOf("FAN OFF") > -1) {
-		skip_auto_fan = false;
+		skip_auto_fan = true;
 		control(FAN, false, true);
 	}
 	if (cmd.indexOf("RESET WIFI") > -1) {

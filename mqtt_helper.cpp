@@ -65,54 +65,49 @@ void handleTopic__Mushroom_Commands_HubID() {
 		isCommandFromApp = true;
 	}
 	String pump1_stt = commands["MIST"].as<String>();
+	extern bool skip_auto_pump1;
 	if (pump1_stt == on_)
 	{
+		skip_auto_pump1 = true;
 		pump1_change = control(PUMP1, true, false);
 	}
 	else if (pump1_stt == off_)
 	{
+		skip_auto_pump1 = true;
 		pump1_change = control(PUMP1, false, false);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
 	extern bool skip_auto_light;
-	extern int light;
 	if (light_stt == on_)
 	{
+		skip_auto_light = true;
 		light_change = control(LIGHT, true, false);
-		if (light < LIGHT_MIN) {
-			skip_auto_light = false;
-		}
-		else if (light > LIGHT_MAX) {
-			skip_auto_light = true;
-		}
 	}
 	else if (light_stt == off_)
 	{
+		skip_auto_light = true;
 		light_change = control(LIGHT, false, false);
-		if (light > LIGHT_MAX) {
-			skip_auto_light = false;
-		}
-		else if (light < LIGHT_MIN) {
-			skip_auto_light = true;
-		}
 	}
 
 	String fan_stt = commands["FAN"].as<String>();
+	extern bool skip_auto_fan;
 	if (fan_stt == on_)
 	{
+		skip_auto_fan = true;
 		fan_change = control(FAN, true, false);
 	}
 	else if (fan_stt == off_)
 	{
+		skip_auto_fan = true;
 		fan_change = control(FAN, false, false);
 	}
 
 	if (isCommandFromApp) {
-		Serial.print(F("Send status relay to server "));
-		Serial.print(pump1_change);
-		Serial.print(fan_change);
-		Serial.println(light_change);
+		DEBUG.print(F("Send status relay to server "));
+		DEBUG.print(pump1_change);
+		DEBUG.print(fan_change);
+		DEBUG.println(light_change);
 		send_status_to_server(pump1_change, fan_change, light_change);
 	}
 }
@@ -200,7 +195,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 				String ver = terminal["Version"].as<String>();
 				if (ver != _firmwareVersion) {
 					String url = terminal["Url"].as<String>();
-					mqtt_publish("Mushroom/Terminal/" + HubID, "Updating new firmware");
+					mqtt_publish("Mushroom/Terminal/" + HubID, "Updating new firmware " + ver);
 					DEBUG.print(F("\nUpdating new firmware: "));
 					DEBUG.println(ver);
 					DEBUG.println(url);
