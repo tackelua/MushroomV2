@@ -362,7 +362,7 @@ void auto_control() {
 
 	//+ PUMP1 tự tắt sau 1.5 phút
 	if ((millis() - t_pump1_change) > 3 * 30000) {
-		skip_auto_light = false;
+		skip_auto_pump1 = false;
 		if (stt_pump1) {
 			control(PUMP1, false, true);
 		}
