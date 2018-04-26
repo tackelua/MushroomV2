@@ -297,6 +297,21 @@ void hc595_digitalWrite(int pin, bool status) {
 	//Serial.println();
 }
 
+bool create_logs(String content, String from = "") {
+	StaticJsonBuffer<200> jsLogBuffer;
+	JsonObject& jsLog = jsLogBuffer.createObject();
+	jsLog["HUB_ID"] = HubID;
+	jsLog["Content"] = content;
+	jsLog["From"] = from;
+	jsLog["Timestamp"] = String(now());
+
+	String jsStrLog;
+	jsStrLog.reserve(150);
+	jsLog.printTo(jsStrLog);
+	bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
+	return res;
+}
+
 void send_status_to_server(bool pump1, bool fan, bool light);
 bool control(int pin, bool status, bool update_to_server = false);
 bool control(int pin, bool status, bool update_to_server) { //status = true -> ON; false -> OFF
@@ -306,13 +321,25 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 		t_pump1_change = millis();
 		stt_pump1 = status;
 		pin_change = true;
-		DEBUG.print(F("MIST: "));
+		if (status) {
+			create_logs("Pump on");
+		}
+		else {
+			create_logs("Pump off");
+		}
+		DEBUG.print(F("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == FAN) && (stt_fan != status)) {
 		t_fan_change = millis();
 		stt_fan = status;
 		pin_change = true;
+		if (status) {
+			create_logs("Fan on");
+		}
+		else {
+			create_logs("Fan off");
+		}
 		DEBUG.print(F("FAN: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -320,6 +347,12 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 		t_light_change = millis();
 		stt_light = status;
 		pin_change = true;
+		if (status) {
+			create_logs("Light on");
+		}
+		else {
+			create_logs("Light off");
+		}
 		DEBUG.print(F("LIGHT: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -362,7 +395,7 @@ void auto_control() {
 
 	//+ PUMP1 tự tắt sau 1.5 phút
 	if ((millis() - t_pump1_change) > 3 * 30000) {
-		skip_auto_light = false;
+		skip_auto_pump1 = false;
 		if (stt_pump1) {
 			control(PUMP1, false, true);
 		}
