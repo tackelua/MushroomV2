@@ -3,9 +3,10 @@ float humi;
 int light;
 
 bool stt_pump1 = true;
+bool stt_pump2 = true;
 bool stt_fan = true;
 bool stt_light = true;
-unsigned long t_pump1_change, t_fan_change, t_light_change;
+unsigned long t_pump1_change, t_pump2_change, t_fan_change, t_light_change;
 String CMD_ID = "         ";
 
 
@@ -320,6 +321,15 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 	bool pin_change = false;
 
+	if ((pin == PUMP2) && (stt_pump2 != status)) {
+		t_pump2_change = millis();
+		stt_pump2 = status;
+		create_logs("Pump2", status, isCommandFromApp);
+		DEBUG.print(("PUMP2: "));
+		DEBUG.println(status ? "ON" : "OFF");
+		hc595_digitalWrite(pin, status ? ON : OFF);
+		return true;
+	}
 	if ((pin == PUMP1) && (stt_pump1 != status)) {
 		t_pump1_change = millis();
 		stt_pump1 = status;
@@ -380,13 +390,19 @@ bool skip_auto_fan = false;
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
-
+	 
 	//+ PUMP1 tự tắt sau 1.5 phút
-	if ((millis() - t_pump1_change) > 10000/*3 * 30000*/) {
+	if ((millis() - t_pump1_change) > 90000) {
 		skip_auto_pump1 = false;
 		if (stt_pump1) {
-			DEBUG.println("AUTO PUMP OFF");
+			DEBUG.println("AUTO PUMP1 OFF");
 			control(PUMP1, false, true, false);
+		}
+	}
+	if ((millis() - t_pump2_change) > 90000) {
+		if (stt_pump2) {
+			DEBUG.println("AUTO PUMP2 OFF");
+			control(PUMP2, false, true, false);
 		}
 	}
 	//+ FAN tự tắt sau 1 tiếng
@@ -425,14 +441,15 @@ void auto_control() {
 		skip_auto_pump1 = true;
 		skip_auto_fan = true;
 		DEBUG.println("AUTO PUMP1 ON");
+		control(PUMP2, true, true, false);
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
-	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 60000/*3600000*/) && !stt_pump1) {
-		DEBUG.println("AUTO PUMP1 ON");
+	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
+		DEBUG.println("AUTO PUMP2 ON");
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
