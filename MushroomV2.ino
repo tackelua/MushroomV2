@@ -21,7 +21,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.5"
+#define __VERSION__	"2.1.7"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
@@ -35,7 +35,25 @@ bool STT_FAN = false;
 bool STT_LIGHT = false;
 bool STT_LED_STATUS = false;
 
-extern void updateTimeStamp(unsigned long interval);
+
+//void DEBUG.print(String x, bool isSendToMQTT = false);
+//void DEBUG.print(String x, bool isSendToMQTT) {
+//	DEBUG.print(x);
+//	if (isSendToMQTT) {
+//		mqtt_publish("Mushroom/Debug/" + HubID, x, false);
+//	}
+//}
+//void DEBUG.println(String x = "", bool isSendToMQTT = false);
+//void DEBUG.println(String x, bool isSendToMQTT) {
+//	DEBUG.println(x);
+//	if (x = "") return;
+//	if (isSendToMQTT) {
+//		mqtt_publish("Mushroom/Debug/" + HubID, x, false);
+//		mqtt_publish("Mushroom/Debug/" + HubID, "\r\n", false);
+//	}
+//}
+void updateTimeStamp(unsigned long interval);
+bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
 String getID() {
 	byte mac[6];
 	WiFi.macAddress(mac);
@@ -47,12 +65,13 @@ String getID() {
 	id.toUpperCase();
 	return id;
 }
-String HubID = getID();
+String HubID = "600194092C1D";// getID();
 
 #ifdef USE_OLED
 SSD1306  display(0x3c, SDA, SCL);
 QRcode qrcode(&display);
 #endif // USE_OLED
+
 
 void setup()
 {
@@ -76,11 +95,11 @@ void setup()
 	//display.drawString(0, 10, "SmartConfig");
 	//display.display();
 
-	//Serial.println(F("SmartConfig started."));
+	//Serial.println(("SmartConfig started."));
 	//WiFi.beginSmartConfig();
 	//while (1) {
 	//	delay(100);
-	//	Serial.print(F("."));
+	//	Serial.print(("."));
 	//	if (WiFi.smartConfigDone()) {
 	//		WiFi.stopSmartConfig();
 	//		break;
@@ -93,7 +112,7 @@ void setup()
 	//display.drawString(0, 10, "Success");
 	//display.display();
 
-	//Serial.println(F("SmartConfig: Success"));
+	//Serial.println(("SmartConfig: Success"));
 	//WiFi.printDiag(Serial);
 
 	//wifi_init();
@@ -114,15 +133,15 @@ void setup()
 	pinMode(HC595_STCP, OUTPUT); digitalWrite(HC595_STCP, HIGH);
 	pinMode(PININ_WATER_L, INPUT);
 
-	control(PUMP1, false, false);
-	control(FAN, false, false);
-	control(LIGHT, false, false);
-	control(LED_STATUS, false, false);
+	control(PUMP1, false, false, false);
+	control(FAN, false, false, false);
+	control(LIGHT, false, false, false);
+	control(LED_STATUS, false, false, false);
 
 	Serial.println("HID=" + HubID);
 
 
-	Serial.println(F("LED_STATUS ON"));
+	Serial.println(("LED_STATUS ON"));
 
 	sensor_init();
 
@@ -131,7 +150,7 @@ void setup()
 	Serial.println(WiFi.RSSI());
 
 	hc595_digitalWrite(LED_STATUS, OFF);
-	Serial.println(F("LED_STATUS OFF"));
+	Serial.println(("LED_STATUS OFF"));
 
 #ifdef USE_OLED
 	display.clear();
@@ -141,15 +160,15 @@ void setup()
 	display.display();
 #endif // USE_OLED
 
-	DEBUG.print(F("IP: "));
-	DEBUG.println(WiFi.localIP());
-	DEBUG.print(F("Firmware Version: "));
+	DEBUG.print(("IP: "));
+	DEBUG.println(WiFi.localIP().toString());
+	DEBUG.print(("Firmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
 	Serial.print("ID = ");
 	Serial.println(HubID);
 	updateTimeStamp(0);
-	mqtt_init(); 
+	mqtt_init();
 }
 
 void loop()

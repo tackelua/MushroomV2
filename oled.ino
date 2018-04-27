@@ -33,7 +33,7 @@ void oled_analogClock(int _hour, int _min, int _sec, int x = 0, int y = 0) {
 
 	String _time = String(_hour) + ":" + String(_min) + ":" + String(_sec);
 	DEBUG.print("OLED Time: ");
-	DEBUG.println(_time);
+	DEBUG.printf(_time);
 
 	float angle = (_sec) * 6;
 	angle = (angle / 57.29577951); //Convert degrees to radians

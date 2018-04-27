@@ -12,7 +12,7 @@ String CMD_ID = "         ";
 #pragma region functions
 bool smart_config() {
 	bool sttled = false;
-	Serial.println(F("SmartConfig started."));
+	Serial.println(("SmartConfig started."));
 	unsigned long t = millis();
 	WiFi.beginSmartConfig();
 	while (1) {
@@ -20,15 +20,15 @@ bool smart_config() {
 		hc595_digitalWrite(LED_STATUS, sttled);
 		delay(200);
 		if (WiFi.smartConfigDone()) {
-			Serial.println(F("SmartConfig: Success"));
-			Serial.print(F("RSSI: "));
+			Serial.println(("SmartConfig: Success"));
+			Serial.print(("RSSI: "));
 			Serial.println(WiFi.RSSI());
 			WiFi.printDiag(Serial);
 			WiFi.stopSmartConfig();
 			break;
 		}
 		if ((millis() - t) > (3 * 60000)) {
-			Serial.println(F("ESP restart"));
+			Serial.println(("ESP restart"));
 			return false;
 		}
 		myBtn.read();
@@ -44,13 +44,13 @@ bool smart_config() {
 	WiFi.reconnect();
 	if (WiFi.waitForConnectResult() == WL_CONNECTED)
 	{
-		Serial.println(F("connected\n"));
-		Serial.print(F("IP: "));
+		Serial.println(("connected\n"));
+		Serial.print(("IP: "));
 		Serial.println(WiFi.localIP());
 		return true;
 	}
 	else {
-		Serial.println(F("SmartConfig Fail\n"));
+		Serial.println(("SmartConfig Fail\n"));
 	}
 	return false;
 }
@@ -61,12 +61,12 @@ void wifi_init() {
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
 
-	//Serial.println(F("SmartConfig started."));
+	//Serial.println(("SmartConfig started."));
 	//WiFi.beginSmartConfig();
 	//while (1) {
 	//	delay(1000);
 	//	if (WiFi.smartConfigDone()) {
-	//		Serial.println(F("SmartConfig: Success"));
+	//		Serial.println(("SmartConfig: Success"));
 	//		WiFi.printDiag(Serial);
 	//		//WiFi.stopSmartConfig();
 	//		break;
@@ -75,18 +75,18 @@ void wifi_init() {
 
 	WiFi.printDiag(Serial);
 
-	Serial.println(F("\nConnecting..."));
+	Serial.println(("\nConnecting..."));
 
 	if (WiFi.waitForConnectResult() == WL_CONNECTED)
 	{
-		Serial.println(F("connected\n"));
+		Serial.println(("connected\n"));
 	}
 	else
 	{
-		Serial.println(F("connect again\n"));
+		Serial.println(("connect again\n"));
 		if (WiFi.waitForConnectResult() == WL_CONNECTED)
 		{
-			Serial.println(F("connected\n"));
+			Serial.println(("connected\n"));
 			return;
 		}
 
@@ -100,6 +100,7 @@ String http_request(String host, uint16_t port = 80, String url = "/") {
 	client.setTimeout(100);
 	if (!client.connect(host.c_str(), port)) {
 		Serial.println("connection failed");
+		delay(1000);
 		return "";
 	}
 	client.print(String("GET ") + url + " HTTP/1.1\r\n" +
@@ -141,7 +142,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 	static bool wasSync = false;
 	if (interval == 0) {
 		{
-			Serial.println(F("Update timestamp"));
+			Serial.println(("Update timestamp"));
 			String strTimeStamp = http_request("date.jsontest.com");
 			Serial.println(strTimeStamp);
 			DynamicJsonBuffer timestamp(500);
@@ -155,7 +156,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 					wasSync = true;
 					setTime(ts);
 					adjustTime(7 * SECS_PER_HOUR);
-					Serial.println(F("Time Updated\r\n"));
+					Serial.println(("Time Updated\r\n"));
 					return;
 				}
 			}
@@ -172,7 +173,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 				wasSync = true;
 				setTime(ts);
 				adjustTime(7 * SECS_PER_HOUR);
-				Serial.println(F("Time Updated\r\n"));
+				Serial.println(("Time Updated\r\n"));
 				return;
 			}
 		}
@@ -297,12 +298,14 @@ void hc595_digitalWrite(int pin, bool status) {
 	//Serial.println();
 }
 
-bool create_logs(String content, String from = "") {
+bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	StaticJsonBuffer<200> jsLogBuffer;
 	JsonObject& jsLog = jsLogBuffer.createObject();
 	jsLog["HUB_ID"] = HubID;
+	String content = relayName;
+	content += status ? " on" : " off";
 	jsLog["Content"] = content;
-	jsLog["From"] = from;
+	jsLog["From"] = isCommandFromApp ? "APP" : "HUB";
 	jsLog["Timestamp"] = String(now());
 
 	String jsStrLog;
@@ -313,47 +316,32 @@ bool create_logs(String content, String from = "") {
 }
 
 void send_status_to_server(bool pump1, bool fan, bool light);
-bool control(int pin, bool status, bool update_to_server = false);
-bool control(int pin, bool status, bool update_to_server) { //status = true -> ON; false -> OFF
+bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
+bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 	bool pin_change = false;
 
 	if ((pin == PUMP1) && (stt_pump1 != status)) {
 		t_pump1_change = millis();
 		stt_pump1 = status;
 		pin_change = true;
-		if (status) {
-			create_logs("Pump on");
-		}
-		else {
-			create_logs("Pump off");
-		}
-		DEBUG.print(F("PUMP: "));
+		create_logs("Pump", status, isCommandFromApp);
+		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == FAN) && (stt_fan != status)) {
 		t_fan_change = millis();
 		stt_fan = status;
 		pin_change = true;
-		if (status) {
-			create_logs("Fan on");
-		}
-		else {
-			create_logs("Fan off");
-		}
-		DEBUG.print(F("FAN: "));
+		create_logs("Fan", status, isCommandFromApp);
+		DEBUG.print(("FAN: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == LIGHT) && (stt_light != status)) {
 		t_light_change = millis();
 		stt_light = status;
 		pin_change = true;
-		if (status) {
-			create_logs("Light on");
-		}
-		else {
-			create_logs("Light off");
-		}
-		DEBUG.print(F("LIGHT: "));
+		create_logs("Light", status, isCommandFromApp);
+		DEBUG.print(("LIGHT: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 
@@ -367,9 +355,9 @@ bool control(int pin, bool status, bool update_to_server) { //status = true -> O
 }
 
 void send_status_to_server(bool pump1 = true, bool fan = true, bool light = true) {
-	Serial.println(F("send_status_to_server"));
+	DEBUG.println(("send_status_to_server"));
 	if (pump1 == false && fan == false && light == false) {
-		Serial.println(F("No any thing change"));
+		Serial.println(("No any thing change"));
 		return;
 	}
 	StaticJsonBuffer<200> jsBuffer;
@@ -394,60 +382,67 @@ void auto_control() {
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
 	//+ PUMP1 tự tắt sau 1.5 phút
-	if ((millis() - t_pump1_change) > 3 * 30000) {
+	if ((millis() - t_pump1_change) > 10000/*3 * 30000*/) {
 		skip_auto_pump1 = false;
 		if (stt_pump1) {
-			control(PUMP1, false, true);
+			DEBUG.println("AUTO PUMP OFF");
+			control(PUMP1, false, true, false);
 		}
 	}
 	//+ FAN tự tắt sau 1 tiếng
 	if ((millis() - t_fan_change) > (1 * 1000 * SECS_PER_HOUR)) {
 		skip_auto_fan = false;
 		if (stt_fan) {
-			control(FAN, false, true);
+			DEBUG.println("AUTO FAN OFF");
+			control(FAN, false, true, false);
 		}
 	}
 	//+ LIGHT tự tắt sau 3 tiếng
 	if ((millis() - t_light_change) > (3 * 1000 * SECS_PER_HOUR)) {
 		skip_auto_light = false;
 		if (stt_light) {
-			control(LIGHT, false, true);
+			DEBUG.println("AUTO LIGHT OFF");
+			control(LIGHT, false, true, false);
 		}
 	}
 	//==============================================================
 	//1/ Bật tắt đèn
 	if (!skip_auto_light) {
-		if (light < LIGHT_MIN) {
-			control(LIGHT, true, true);
+		if ((light < LIGHT_MIN) && (hour() >= 6) && (hour() <= 18)) {
+			DEBUG.println("AUTO LIGHT ON");
+			control(LIGHT, true, true, false);
 		}
 		else if (light > LIGHT_MAX) {
-			control(LIGHT, false, true);
+			DEBUG.println("AUTO LIGHT OFF");
+			control(LIGHT, false, true, false);
 		}
 	}
 	//-------------------
-	return;
+
 	//2. Bật tắt phun sương
 	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
 	if (!skip_auto_pump1 && ((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0)) {
 		skip_auto_pump1 = true;
-		control(PUMP1, true, false);
-		control(FAN, true, true);
+		skip_auto_fan = true;
+		DEBUG.println("AUTO PUMP1 ON");
+		control(PUMP1, true, true, false);
+		DEBUG.println("AUTO FAN ON");
+		control(FAN, true, true, false);
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
-	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
-		control(PUMP1, true, false);
-		control(FAN, true, true);
+	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 60000/*3600000*/) && !stt_pump1) {
+		DEBUG.println("AUTO PUMP1 ON");
+		control(PUMP1, true, true, false);
+		DEBUG.println("AUTO FAN ON");
+		control(FAN, true, true, false);
 	}
 	//-------------------
 
 	//c. Bật tắt quạt
-	if (!skip_auto_fan && ((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX) && ((millis() - t_pump1_change) < 3600000) && !stt_pump1) {
-		control(FAN, true, true);
-	}
-
-	if (!skip_auto_fan && !(((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) || (((millis() - t_pump1_change) < 3600000) && stt_pump1) && skip_auto_fan) {
-		control(FAN, false, true);
+	if (!skip_auto_fan && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) < 3600000) && !stt_fan) {
+		DEBUG.println("AUTO FAN ON");
+		control(FAN, true, true, false);
 	}
 	delay(1);
 }
@@ -459,15 +454,15 @@ void updateFirmware(String url) {
 
 	switch (ret) {
 	case HTTP_UPDATE_FAILED:
-		DEBUG.printf("HTTP_UPDATE_FAILD Error (%d): %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+		DEBUG.printf("HTTP_UPDATE_FAILD Error (%d): %s\r\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
 		break;
 
 	case HTTP_UPDATE_NO_UPDATES:
-		DEBUG.println(F("HTTP_UPDATE_NO_UPDATES"));
+		DEBUG.println(("HTTP_UPDATE_NO_UPDATES"));
 		break;
 
 	case HTTP_UPDATE_OK:
-		DEBUG.println(F("HTTP_UPDATE_OK"));
+		DEBUG.println(("HTTP_UPDATE_OK"));
 		delay(2000);
 		ESP.restart();
 		break;
@@ -478,7 +473,7 @@ void serial_command_handle() {
 	if (Serial.available()) {
 		String Scmd = Serial.readString();
 		Scmd.trim();
-		DEBUG.println(F("\r\n>>>"));
+		DEBUG.println(("\r\n>>>"));
 		DEBUG.println(Scmd);
 
 		control_handle(Scmd);
@@ -491,32 +486,32 @@ void control_handle(String cmd) {
 	cmd.toUpperCase();
 	if (cmd.indexOf("LIGHT ON") > -1) {
 		skip_auto_light = true;
-		control(LIGHT, true, true);
+		control(LIGHT, true, true, true);
 	}
 	if (cmd.indexOf("LIGHT OFF") > -1) {
 		skip_auto_light = true;
-		control(LIGHT, false, true);
+		control(LIGHT, false, true, true);
 	}
 
 	if (cmd.indexOf("MIST ON") > -1) {
 		skip_auto_pump1 = true;
-		control(PUMP1, true, true);
+		control(PUMP1, true, true, true);
 	}
 	if (cmd.indexOf("MIST OFF") > -1) {
 		skip_auto_pump1 = true;
-		control(PUMP1, false, true);
+		control(PUMP1, false, true, true);
 	}
 
 	if (cmd.indexOf("FAN ON") > -1) {
 		skip_auto_fan = true;
-		control(FAN, true, true);
+		control(FAN, true, true, true);
 	}
 	if (cmd.indexOf("FAN OFF") > -1) {
 		skip_auto_fan = true;
-		control(FAN, false, true);
+		control(FAN, false, true, true);
 	}
 	if (cmd.indexOf("RESET WIFI") > -1) {
-		DEBUG.println(F("Reset Wifi"));
+		DEBUG.println(("Reset Wifi"));
 		WiFi.disconnect();
 	}
 }

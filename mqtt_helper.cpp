@@ -28,7 +28,7 @@ bool library = false;
 
 extern String timeStr;
 extern bool stt_pump1, stt_fan, stt_light;
-extern bool control(int pin, bool status, bool update_to_server = true);
+extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
 extern void send_status_to_server(bool pump1, bool fan, bool light);
 extern void hc595_digitalWrite(int pin, bool status);
 
@@ -51,12 +51,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 	bool isCommandFromApp = false;
 	CMD_ID.trim();
 	if (CMD_ID.startsWith("HW-")) {
-		//DEBUG.print(F("Command ID "));
+		//DEBUG.print(("Command ID "));
 		//DEBUG.print(CMD_ID);
-		//DEBUG.print(F(" was excuted."));
+		//DEBUG.print((" was excuted."));
 		static bool firsControlFromRetain = true;
 		if (!firsControlFromRetain) {
-			DEBUG.println(F("Skipped\r\n"));
+			DEBUG.println(("Skipped\r\n"));
 			return;
 		}
 		firsControlFromRetain = false;
@@ -69,12 +69,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 	if (pump1_stt == on_)
 	{
 		skip_auto_pump1 = true;
-		pump1_change = control(PUMP1, true, false);
+		pump1_change = control(PUMP1, true, false, isCommandFromApp);
 	}
 	else if (pump1_stt == off_)
 	{
 		skip_auto_pump1 = true;
-		pump1_change = control(PUMP1, false, false);
+		pump1_change = control(PUMP1, false, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
@@ -82,12 +82,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 	if (light_stt == on_)
 	{
 		skip_auto_light = true;
-		light_change = control(LIGHT, true, false);
+		light_change = control(LIGHT, true, false, isCommandFromApp);
 	}
 	else if (light_stt == off_)
 	{
 		skip_auto_light = true;
-		light_change = control(LIGHT, false, false);
+		light_change = control(LIGHT, false, false, isCommandFromApp);
 	}
 
 	String fan_stt = commands["FAN"].as<String>();
@@ -95,19 +95,15 @@ void handleTopic__Mushroom_Commands_HubID() {
 	if (fan_stt == on_)
 	{
 		skip_auto_fan = true;
-		fan_change = control(FAN, true, false);
+		fan_change = control(FAN, true, false, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
 		skip_auto_fan = true;
-		fan_change = control(FAN, false, false);
+		fan_change = control(FAN, false, false, isCommandFromApp);
 	}
 
 	if (isCommandFromApp) {
-		DEBUG.print(F("Send status relay to server "));
-		DEBUG.print(pump1_change);
-		DEBUG.print(fan_change);
-		DEBUG.println(light_change);
 		send_status_to_server(pump1_change, fan_change, light_change);
 	}
 }
@@ -143,18 +139,18 @@ int wifi_quality() {
 
 void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	//ulong t = millis();
-	//DEBUG.print(F("\r\n#1 FREE RAM : "));
+	//DEBUG.print(("\r\n#1 FREE RAM : "));
 	//DEBUG.println(ESP.getFreeHeap());
 
 	String topicStr = topic;
 
-	DEBUG.println(F("\r\n>>>"));
+	DEBUG.println(("\r\n>>>"));
 	//DEBUG.println(topicStr);
-	DEBUG.print(F("Message arrived: "));
+	DEBUG.print(("Message arrived: "));
 	DEBUG.print(topicStr);
-	DEBUG.print(F("["));
-	DEBUG.print(length);
-	DEBUG.println(F("]"));
+	DEBUG.print(("["));
+	DEBUG.print(String(length));
+	DEBUG.println(("]"));
 
 	mqtt_Message = "";
 	hc595_digitalWrite(LED_STATUS, ON);
@@ -187,7 +183,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		   "Url" : ""
 		}
 		*/
-		DEBUG.println(F("Update firmware function"));
+		DEBUG.println(("Update firmware function"));
 		String command = terminal["Command"].as<String>();
 		if (command == "FOTA") {
 			String hub = terminal["Hub_ID"].as<String>();
@@ -196,11 +192,11 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 				if (ver != _firmwareVersion) {
 					String url = terminal["Url"].as<String>();
 					mqtt_publish("Mushroom/Terminal/" + HubID, "Updating new firmware " + ver);
-					DEBUG.print(F("\nUpdating new firmware: "));
+					DEBUG.print(("\nUpdating new firmware: "));
 					DEBUG.println(ver);
 					DEBUG.println(url);
 					updateFirmware(url);
-					DEBUG.println(F("DONE!"));
+					DEBUG.println(("DONE!"));
 				}
 			}
 		}
@@ -226,7 +222,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		control_handle(mqtt_cmd);
 	}
 
-	//DEBUG.print(F("#2 FREE RAM : "));
+	//DEBUG.print(("#2 FREE RAM : "));
 	//DEBUG.println(ESP.getFreeHeap());
 	//t = millis() - t;
 	//DEBUG.println("Time: " + String(t));
@@ -234,10 +230,10 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 
 void mqtt_reconnect() {  // Loop until we're reconnected
 	while (!mqtt_client.connected()) {
-		DEBUG.print(F("Attempting MQTT connection..."));
+		DEBUG.print(("Attempting MQTT connection..."));
 		//boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
 		if (mqtt_client.connect(HubID.c_str(), mqtt_user, mqtt_password, ("Mushroom/Status/" + HubID).c_str(), 0, true, String(HubID + " offline").c_str())) {
-			DEBUG.print(F(" Connected."));
+			DEBUG.print((" Connected."));
 			//String h_online = "{\"HUB_ID\":\"" + HubID + "\",\"STATUS\":\"ONLINE\",\"FW_VER\":\"" + _firmwareVersion + "\",\"WIFI\":\"" + WiFi.SSID() + "\",\"SIGNAL\":" + String(wifi_quality()) + "}";
 			String h_online = HubID + " online";
 			mqtt_client.publish(("Mushroom/Status/" + HubID).c_str(), (HubID + " online").c_str(), true);
@@ -249,10 +245,10 @@ void mqtt_reconnect() {  // Loop until we're reconnected
 			mqtt_client.subscribe("Mushroom/Terminal");
 		}
 		else {
-			DEBUG.print(F("failed, rc="));
-			DEBUG.print(mqtt_client.state());
+			DEBUG.print(("failed, rc="));
+			DEBUG.println(String(mqtt_client.state()));
 			return;
-			//DEBUG.println(F(" try again"));
+			//DEBUG.println((" try again"));
 			//delay(500);
 		}
 	}
@@ -281,7 +277,7 @@ bool mqtt_publish(String topic, String payload, bool retain) {
 	if (!mqtt_client.connected()) {
 		return false;
 	}
-	DEBUG.print(F("MQTT publish to topic: "));
+	DEBUG.print(("MQTT publish to topic: "));
 	DEBUG.println(topic);
 	DEBUG.println(payload);
 	DEBUG.println();

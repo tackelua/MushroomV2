@@ -7,6 +7,8 @@
 #include "WProgram.h"
 #endif
 
+#include "mqtt_helper.h"
+extern String HubID;
 
 #define DEBUG Serial
 
