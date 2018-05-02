@@ -70,11 +70,13 @@ void handleTopic__Mushroom_Commands_HubID() {
 	{
 		skip_auto_pump1 = true;
 		pump1_change = control(PUMP1, true, false, isCommandFromApp);
+		pump1_change = control(PUMP2, true, false, isCommandFromApp);
 	}
 	else if (pump1_stt == off_)
 	{
 		skip_auto_pump1 = true;
 		pump1_change = control(PUMP1, false, false, isCommandFromApp);
+		pump1_change = control(PUMP2, false, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();

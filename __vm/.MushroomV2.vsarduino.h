@@ -108,6 +108,7 @@ typedef long __PTRDIFF_TYPE__;
 #define noInterrupts() cli()
 
 #include "MushroomV2.ino"
+#include "blynk.ino"
 #include "button.ino"
 #include "functions.ino"
 #include "oled.ino"

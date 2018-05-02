@@ -310,6 +310,10 @@ void update_sensor(unsigned long period) {
 		data.reserve(120);
 		jsData.printTo(data);
 		mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
+
+		Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
+		Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
+		Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
 	}
 }
 
@@ -454,6 +458,10 @@ void send_status_to_server(bool pump1 = true, bool fan = true, bool light = true
 	jsStatusStr.reserve(150);
 	jsStatus.printTo(jsStatusStr);
 	mqtt_publish("Mushroom/Commands/" + HubID, jsStatusStr, true);
+
+	Blynk.virtualWrite(BL_PUMP1, stt_pump1);
+	Blynk.virtualWrite(BL_FAN, stt_fan);
+	Blynk.virtualWrite(BL_LIGHT, stt_light);
 }
 
 bool skip_auto_light = false;
@@ -463,7 +471,7 @@ void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
-	//+ PUMP1 tự tắt sau 1.5 phút
+	//+ PUMP1 tự tắt sau 5 phút
 	if ((millis() - t_pump1_change) > (5 * 60000)) {
 		skip_auto_pump1 = false;
 		if (stt_pump1) {
@@ -509,7 +517,7 @@ void auto_control() {
 
 	//2. Bật tắt phun sương
 	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
-	if (!skip_auto_pump1 && ((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0)) {
+	if (((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0)) {
 		skip_auto_pump1 = true;
 		skip_auto_fan = true;
 		DEBUG.println("AUTO PUMP1 ON");

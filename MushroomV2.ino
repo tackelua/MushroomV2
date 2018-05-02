@@ -1,4 +1,5 @@
-﻿
+﻿#define BLYNK_PRINT Serial
+#include <BlynkSimpleEsp8266.h>
 #include <Button.h>
 #include <TimeLib.h>
 #include <Time.h>
@@ -21,7 +22,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.9"
+#define __VERSION__	"2.1.10"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
@@ -172,7 +173,8 @@ void setup()
 	Serial.print("ID = ");
 	Serial.println(HubID);
 	//updateTimeStamp(0);
-	mqtt_init();
+	mqtt_init(); 
+	blynk_init();
 }
 
 void loop()
@@ -186,4 +188,5 @@ void loop()
 	button_handle();
 	update_sensor(10000);
 	auto_control();
+	Blynk.run();
 }

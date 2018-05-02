@@ -25,6 +25,7 @@
     <None Include="requirements_firmware_mushroom.docx">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="blynk.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.MushroomV2.vsarduino.h">
