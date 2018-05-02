@@ -11,14 +11,14 @@ String CMD_ID = "         ";
 
 
 #pragma region functions
+bool ledStt = false;
 bool smart_config() {
-	bool sttled = false;
 	Serial.println(("SmartConfig started."));
 	unsigned long t = millis();
 	WiFi.beginSmartConfig();
 	while (1) {
-		sttled = !sttled;
-		hc595_digitalWrite(LED_STATUS, sttled);
+		ledStt = !ledStt;
+		hc595_digitalWrite(LED_STATUS, ledStt);
 		delay(200);
 		if (WiFi.smartConfigDone()) {
 			Serial.println(("SmartConfig: Success"));
@@ -28,8 +28,9 @@ bool smart_config() {
 			WiFi.stopSmartConfig();
 			break;
 		}
-		if ((millis() - t) > (3 * 60000)) {
+		if ((millis() - t) > (5 * 60000)) {
 			Serial.println(("ESP restart"));
+			ESP.restart();
 			return false;
 		}
 		myBtn.read();
@@ -61,6 +62,7 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
+	WiFi.begin("MIC");
 
 	//Serial.println(("SmartConfig started."));
 	//WiFi.beginSmartConfig();
@@ -73,25 +75,92 @@ void wifi_init() {
 	//		break;
 	//	}
 	//}
-
+	DEBUG.println();
 	WiFi.printDiag(Serial);
+	DEBUG.println();
 
-	Serial.println(("\nConnecting..."));
+	//Serial.println(("\nConnecting..."));
+	//
+	//if (WiFi.waitForConnectResult() == WL_CONNECTED)
+	//{
+	//	Serial.println(("connected\n"));
+	//}
+	//else
+	//{
+	//	Serial.println(("connect again\n"));
+	//	if (WiFi.waitForConnectResult() == WL_CONNECTED)
+	//	{
+	//		Serial.println(("connected\n"));
+	//		return;
+	//	}
+	//
+	//	smart_config();
+	//}
+}
 
-	if (WiFi.waitForConnectResult() == WL_CONNECTED)
-	{
-		Serial.println(("connected\n"));
-	}
-	else
-	{
-		Serial.println(("connect again\n"));
-		if (WiFi.waitForConnectResult() == WL_CONNECTED)
-		{
-			Serial.println(("connected\n"));
-			return;
+void wifi_loop() {
+	if (WiFi.isConnected() == false) {
+		static unsigned long t_pre_check_wifi_connected = -5000 - 1;
+		if ((t_pre_check_wifi_connected == 0) || ((millis() - t_pre_check_wifi_connected) > 5000)) {
+			DEBUG.println("Connecting wifi...");
+			if (WiFi.waitForConnectResult() == WL_CONNECTED)
+			{
+				DEBUG.println(("connected\n"));
+				DEBUG.println(WiFi.localIP());
+			}
 		}
+	}
 
-		smart_config();
+	if (flag_SmartConfig) {
+		if (WiFi.smartConfigDone()) {
+			DEBUG.println(("SmartConfig: Success"));
+			DEBUG.print(("RSSI: "));
+			DEBUG.println(WiFi.RSSI());
+			WiFi.printDiag(DEBUG);
+			WiFi.stopSmartConfig();
+		}
+	}
+}
+
+extern PubSubClient mqtt_client;
+void led_loop() {
+	if (flag_SmartConfig) {
+		static unsigned long t = millis();
+		if ((millis() - t) > 100) {
+			t = millis();
+			ledStt = !ledStt;
+			hc595_digitalWrite(LED_STATUS, ledStt);
+		}
+	}
+	else if (!mqtt_client.connected()) { //loi ket noi den server
+		static unsigned long t = millis();
+		if ((millis() - t) > 1000) {
+			t = millis();
+			ledStt = !ledStt;
+			hc595_digitalWrite(LED_STATUS, ledStt);
+		}
+	}
+	else if (digitalRead(PININ_WATER_L)) { //water empty 
+		static unsigned long t = millis();
+		if (ledStt) {
+			if ((millis() - t) > 1000) {
+				t = millis();
+				ledStt = !ledStt;
+				hc595_digitalWrite(LED_STATUS, ledStt);
+			}
+		}
+		else {
+			if ((millis() - t) > 3000) {
+				t = millis();
+				ledStt = !ledStt;
+				hc595_digitalWrite(LED_STATUS, ledStt);
+			}
+		}
+	}
+	else { //normal
+		if (!ledStt) {
+			hc595_digitalWrite(LED_STATUS, ledStt);
+		}
 	}
 }
 
@@ -138,6 +207,9 @@ String http_request(String host, uint16_t port = 80, String url = "/") {
 }
 
 void updateTimeStamp(unsigned long interval = 0) {
+	if (!WiFi.isConnected()) {
+		return;
+	}
 	delay(1);
 	static unsigned long t_pre_update = 0;
 	static bool wasSync = false;
@@ -274,7 +346,7 @@ void hc595_digitalWrite(int pin, bool status) {
 //else {
 //  output = output & 0b10111111;
 //}
-
+		ledStt = status;
 		out = 0x01 << pin;
 		if (!status) { //LED hiện tại alway off, on when signal. -> alway on, off when signal
 			output |= out;
@@ -390,9 +462,9 @@ bool skip_auto_fan = false;
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
-	 
+
 	//+ PUMP1 tự tắt sau 1.5 phút
-	if ((millis() - t_pump1_change) > 90000) {
+	if ((millis() - t_pump1_change) > (5 * 60000)) {
 		skip_auto_pump1 = false;
 		if (stt_pump1) {
 			DEBUG.println("AUTO PUMP1 OFF");

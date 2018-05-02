@@ -21,7 +21,7 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.8"
+#define __VERSION__	"2.1.9"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
@@ -71,6 +71,10 @@ String HubID = "600194092C1D";// getID();
 SSD1306  display(0x3c, SDA, SCL);
 QRcode qrcode(&display);
 #endif // USE_OLED
+
+bool flag_SmartConfig = false;
+bool flag_error_wifi = false;
+bool flag_water_empty = false;
 
 
 void setup()
@@ -160,20 +164,22 @@ void setup()
 	display.display();
 #endif // USE_OLED
 
-	DEBUG.print(("IP: "));
-	DEBUG.println(WiFi.localIP().toString());
+	//DEBUG.print(("IP: "));
+	//DEBUG.println(WiFi.localIP().toString());
 	DEBUG.print(("Firmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
 	Serial.print("ID = ");
 	Serial.println(HubID);
-	updateTimeStamp(0);
+	//updateTimeStamp(0);
 	mqtt_init();
 }
 
 void loop()
 {
 	/* add main program code here */
+	wifi_loop();
+	led_loop();
 	updateTimeStamp(3600000);
 	mqtt_loop();
 	serial_command_handle();
