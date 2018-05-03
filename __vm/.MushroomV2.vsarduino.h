@@ -112,5 +112,6 @@ typedef long __PTRDIFF_TYPE__;
 #include "button.ino"
 #include "functions.ino"
 #include "oled.ino"
+#include "wifiManager.ino"
 #endif
 #endif

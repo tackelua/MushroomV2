@@ -1,4 +1,5 @@
-﻿#define BLYNK_PRINT Serial
+﻿#include <WiFiManager.h>
+#define BLYNK_PRINT Serial
 #include <BlynkSimpleEsp8266.h>
 #include <Button.h>
 #include <TimeLib.h>
@@ -22,10 +23,11 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.10"
+#define __VERSION__	"2.1.11"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
+//WiFiManager wifiManager;
 Button myBtn(PININ_BUTTON, true, true, 20);
 
 

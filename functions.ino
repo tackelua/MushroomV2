@@ -62,7 +62,7 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
-	WiFi.begin("MIC");
+	//WiFi.begin("DTU");
 
 	//Serial.println(("SmartConfig started."));
 	//WiFi.beginSmartConfig();
@@ -102,6 +102,7 @@ void wifi_loop() {
 	if (WiFi.isConnected() == false) {
 		static unsigned long t_pre_check_wifi_connected = -5000 - 1;
 		if ((t_pre_check_wifi_connected == 0) || ((millis() - t_pre_check_wifi_connected) > 5000)) {
+			t_pre_check_wifi_connected = millis();
 			DEBUG.println("Connecting wifi...");
 			if (WiFi.waitForConnectResult() == WL_CONNECTED)
 			{
@@ -119,6 +120,7 @@ void wifi_loop() {
 			WiFi.printDiag(DEBUG);
 			WiFi.stopSmartConfig();
 		}
+
 	}
 }
 
@@ -504,11 +506,11 @@ void auto_control() {
 	//==============================================================
 	//1/ Bật tắt đèn
 	if (!skip_auto_light) {
-		if ((light < LIGHT_MIN) && (hour() >= 6) && (hour() <= 18)) {
+		if (library && (light < LIGHT_MIN) && (hour() >= 6) && (hour() <= 18)) {
 			DEBUG.println("AUTO LIGHT ON");
 			control(LIGHT, true, true, false);
 		}
-		else if (light > LIGHT_MAX) {
+		else if (library && (light > LIGHT_MAX)) {
 			DEBUG.println("AUTO LIGHT OFF");
 			control(LIGHT, false, true, false);
 		}
@@ -528,7 +530,7 @@ void auto_control() {
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
-	if (!skip_auto_pump1 && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
+	if (!skip_auto_pump1 && library && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
 		DEBUG.println("AUTO PUMP2 ON");
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
@@ -537,7 +539,7 @@ void auto_control() {
 	//-------------------
 
 	//c. Bật tắt quạt
-	if (!skip_auto_fan && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) < 3600000) && !stt_fan) {
+	if (!skip_auto_fan && library && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) < 3600000) && !stt_fan) {
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
 	}
