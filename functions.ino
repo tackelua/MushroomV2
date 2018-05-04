@@ -473,8 +473,8 @@ void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
-	//+ PUMP1 tự tắt sau 5 phút
-	if ((millis() - t_pump1_change) > (5 * 60000)) {
+	//+ PUMP1 tự tắt sau 1.5 phút
+	if ((millis() - t_pump1_change) > (90000)) {
 		skip_auto_pump1 = false;
 		if (stt_pump1) {
 			DEBUG.println("AUTO PUMP1 OFF");

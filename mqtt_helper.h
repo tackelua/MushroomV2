@@ -22,13 +22,5 @@ void mqtt_init();
 void mqtt_loop();
 bool mqtt_publish(String topic, String payload, bool retain = false);
 
-enum HC595PIN {
-	PUMP1 = 1,
-	PUMP2, //bơm giữa
-	WATER_IN,
-	FAN,
-	LIGHT,
-	LED_STATUS
-};
 #endif
 

@@ -1,4 +1,4 @@
-#ifndef _HARDWARE_h
+﻿#ifndef _HARDWARE_h
 #define _HARDWARE_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -7,7 +7,7 @@
 #include "WProgram.h"
 #endif
 
-#include "mqtt_helper.h"
+//#include "mqtt_helper.h"
 extern String HubID;
 
 #define DEBUG Serial
@@ -21,6 +21,16 @@ extern String HubID;
 #define HC595_SHCP		D7
 #define HC595_STCP		D8
 
+
+enum HC595PIN {
+	PUMP1 = 1,
+	PUMP2, //bơm giữa
+	WATER_IN,
+	FAN,
+	LIGHT,
+	LED_STATUS
+};
+
 /*
  * Which sensor is used?
  */
@@ -32,7 +42,7 @@ extern String HubID;
 
 //========= TEMP - HUMI =========
 #ifdef DHT
-const int DHTPIN = D2;// 16;  //??c d? li?u t? DHT11 ? ch�n 2 tr�n m?ch Arduino
+const int DHTPIN = D2;// 16;  //??c d? li?u t? DHT11 ? chân 2 trên m?ch Arduino
 #define DHTTYPE	DHT11
 #endif // DHT
 

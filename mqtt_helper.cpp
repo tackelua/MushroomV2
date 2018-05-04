@@ -217,6 +217,22 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 			jsData.printTo(data);
 			mqtt_publish("Mushroom/Terminal/" + HubID, data);
 		}
+		else if (mqtt_Message.indexOf("/get library") > -1) {
+			//StaticJsonBuffer<200> jsBuffer;
+			DynamicJsonBuffer jsBuffer(200);
+			JsonObject& jsLib = jsBuffer.createObject();
+			jsLib["TEMP_MAX"] = TEMP_MAX;
+			jsLib["TEMP_MIN"] = TEMP_MIN;
+			jsLib["HUMI_MAX"] = HUMI_MAX;
+			jsLib["HUMI_MIN"] = HUMI_MIN;
+			jsLib["LIGHT_MAX"] = LIGHT_MAX;
+			jsLib["LIGHT_MIN"] = LIGHT_MIN;
+
+			String libs;
+			libs.reserve(100);
+			jsLib.printTo(libs);
+			mqtt_publish("Mushroom/Terminal/" + HubID, libs);
+		}
 
 		String mqtt_cmd = mqtt_Message;
 		mqtt_cmd.toUpperCase();

@@ -64,5 +64,4 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Se
  C:\Users\tacke\Documents\Arduino\libraries\DHT-sensor-library/DHT.h \
  C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\BH1750.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\Wire/Wire.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\hardware.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h
+ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\hardware.h
