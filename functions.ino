@@ -391,6 +391,7 @@ bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	jsStrLog.reserve(150);
 	jsLog.printTo(jsStrLog);
 	bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
+	Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
 	return res;
 }
 
