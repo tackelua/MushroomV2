@@ -204,7 +204,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		}
 	}
 
-	else if (topicStr == "Mushroom/Terminal/" + HubID) {
+	if (topicStr == "Mushroom/Terminal/" + HubID) {
 		if (mqtt_Message.indexOf("/get version") > -1) {
 			//StaticJsonBuffer<200> jsBuffer;
 			DynamicJsonBuffer jsBuffer(200);

@@ -62,7 +62,7 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
-	//WiFi.begin("DTU");
+	//WiFi.begin("MIC");
 
 	//Serial.println(("SmartConfig started."));
 	//WiFi.beginSmartConfig();
