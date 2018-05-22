@@ -1,6 +1,6 @@
 https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 
-Mushroom/Terminal/600194092C1D
+Mushroom/Terminal
 {  
    "Command":"FOTA",
    "Hub_ID":"600194092C1D",

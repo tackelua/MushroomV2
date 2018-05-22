@@ -29,7 +29,7 @@ bool library = false;
 extern String timeStr;
 extern bool stt_pump1, stt_fan, stt_light;
 extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
-extern void send_status_to_server(bool pump1, bool fan, bool light);
+extern void send_status_to_server();
 extern void hc595_digitalWrite(int pin, bool status);
 
 String mqtt_Message;
@@ -106,7 +106,7 @@ void handleTopic__Mushroom_Commands_HubID() {
 	}
 
 	if (isCommandFromApp) {
-		send_status_to_server(pump1_change, fan_change, light_change);
+		send_status_to_server();
 	}
 }
 

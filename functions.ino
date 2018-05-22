@@ -391,11 +391,19 @@ bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	jsStrLog.reserve(150);
 	jsLog.printTo(jsStrLog);
 	bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
+	String strTime = (F("["));
+	strTime += (hour() < 10 ? String("0") + hour() : hour());
+	strTime += (F(":"));
+	strTime += (minute() < 10 ? String("0") + minute() : minute());
+	strTime += (F(":"));
+	strTime += (second() < 10 ? String("0") + second() : second());
+	strTime += (F("] "));
+	Blynk.virtualWrite(V0, strTime + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")\r\n");
 	Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
 	return res;
 }
 
-void send_status_to_server(bool pump1, bool fan, bool light);
+void send_status_to_server();
 bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
 bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 	bool pin_change = false;
@@ -413,7 +421,7 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 		t_pump1_change = millis();
 		stt_pump1 = status;
 		pin_change = true;
-		create_logs("Pump", status, isCommandFromApp);
+		create_logs("Mist", status, isCommandFromApp);
 		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
@@ -437,18 +445,15 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 	if (pin_change) {
 		hc595_digitalWrite(pin, status ? ON : OFF);
 		if (update_to_server) {
-			send_status_to_server(stt_pump1, stt_fan, stt_light);
+			send_status_to_server();
 		}
 	}
 	return pin_change;
 }
 
-void send_status_to_server(bool pump1 = true, bool fan = true, bool light = true) {
+void send_status_to_server() {
 	DEBUG.println(("send_status_to_server"));
-	if (pump1 == false && fan == false && light == false) {
-		Serial.println(("No any thing change"));
-		return;
-	}
+
 	StaticJsonBuffer<200> jsBuffer;
 	JsonObject& jsStatus = jsBuffer.createObject();
 	jsStatus["HUB_ID"] = HubID;
@@ -524,6 +529,7 @@ void auto_control() {
 		skip_auto_pump1 = true;
 		skip_auto_fan = true;
 		DEBUG.println("AUTO PUMP1 ON");
+		DEBUG.println("AUTO PUMP2 ON");
 		control(PUMP2, true, true, false);
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
@@ -532,7 +538,7 @@ void auto_control() {
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
 	if (!skip_auto_pump1 && library && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
-		DEBUG.println("AUTO PUMP2 ON");
+		DEBUG.println("AUTO PUMP1 ON");
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
