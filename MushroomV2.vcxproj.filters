@@ -66,5 +66,8 @@
     <Text Include="Auto Mushroom.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="STM32-ESP-Communication.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

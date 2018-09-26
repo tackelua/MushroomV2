@@ -85,6 +85,7 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mq
  C:\Users\tacke\Documents\Arduino\libraries\pubsubclient\src/PubSubClient.h \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
+ C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/version.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/DynamicJsonBuffer.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/JsonBufferBase.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/JsonParser.hpp \

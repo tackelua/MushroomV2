@@ -21,7 +21,13 @@ extern String HubID;
 #define HC595_SHCP		D7
 #define HC595_STCP		D8
 
-
+//enum STM32_RELAY {
+//	PUMP1 = 1,
+//	PUMP2,
+//	FAN,
+//	LIGHT,
+//	WATER_IN
+//};
 enum HC595PIN {
 	PUMP1 = 1,
 	PUMP2, //bơm giữa

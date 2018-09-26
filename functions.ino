@@ -2,10 +2,6 @@
 float humi;
 int light;
 
-bool stt_pump1 = true;
-bool stt_pump2 = true;
-bool stt_fan = true;
-bool stt_light = true;
 unsigned long t_pump1_change, t_pump2_change, t_fan_change, t_light_change;
 String CMD_ID = "         ";
 
@@ -328,7 +324,7 @@ void hc595_digitalWrite(int pin, bool status) {
 	static byte output = 0x00;
 	static byte pre_output = -1;
 
-	//8bit: 0 - PUMP1 - PUMP2 - WATER_IN - FAN - LIGHT - LED_STATUS - 0
+	//8bit: const 0 - PUMP1 - PUMP2 - WATER_IN - FAN - LIGHT - LED_STATUS - const 0
 	byte out;
 	switch (pin)
 	{
@@ -377,6 +373,20 @@ void hc595_digitalWrite(int pin, bool status) {
 	//Serial.println();
 }
 
+//String make_status_string_to_stm32() {
+//	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+//	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT) + String(STT_WATER_IN);
+//	return s;
+//}
+//void stm32_digitalWrite(int pin, bool status) {
+//	//Serial.print("pin = ");
+//	//Serial.println(pin);
+//	//Serial.print("status = ");
+//	//Serial.println(status);
+//	String c = "set-relay-status-all|HUB|" + make_status_string_to_stm32();
+//	STM32.println(c);
+//}
+
 bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	StaticJsonBuffer<200> jsLogBuffer;
 	JsonObject& jsLog = jsLogBuffer.createObject();
@@ -408,34 +418,34 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 	bool pin_change = false;
 
-	if ((pin == PUMP2) && (stt_pump2 != status)) {
+	if ((pin == PUMP2) && (STT_PUMP2 != status)) {
 		t_pump2_change = millis();
-		stt_pump2 = status;
+		STT_PUMP2 = status;
 		create_logs("Pump2", status, isCommandFromApp);
 		DEBUG.print(("PUMP2: "));
 		DEBUG.println(status ? "ON" : "OFF");
 		hc595_digitalWrite(pin, status ? ON : OFF);
 		return true;
 	}
-	if ((pin == PUMP1) && (stt_pump1 != status)) {
+	if ((pin == PUMP1) && (STT_PUMP1 != status)) {
 		t_pump1_change = millis();
-		stt_pump1 = status;
+		STT_PUMP1 = status;
 		pin_change = true;
 		create_logs("Mist", status, isCommandFromApp);
 		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
-	if ((pin == FAN) && (stt_fan != status)) {
+	if ((pin == FAN) && (STT_FAN != status)) {
 		t_fan_change = millis();
-		stt_fan = status;
+		STT_FAN = status;
 		pin_change = true;
 		create_logs("Fan", status, isCommandFromApp);
 		DEBUG.print(("FAN: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
-	if ((pin == LIGHT) && (stt_light != status)) {
+	if ((pin == LIGHT) && (STT_LIGHT != status)) {
 		t_light_change = millis();
-		stt_light = status;
+		STT_LIGHT = status;
 		pin_change = true;
 		create_logs("Light", status, isCommandFromApp);
 		DEBUG.print(("LIGHT: "));
@@ -457,9 +467,9 @@ void send_status_to_server() {
 	StaticJsonBuffer<200> jsBuffer;
 	JsonObject& jsStatus = jsBuffer.createObject();
 	jsStatus["HUB_ID"] = HubID;
-	jsStatus["MIST"] = stt_pump1 ? on_ : off_;
-	jsStatus["FAN"] = stt_fan ? on_ : off_;
-	jsStatus["LIGHT"] = stt_light ? on_ : off_;
+	jsStatus["MIST"] = STT_PUMP1 ? on_ : off_;
+	jsStatus["FAN"] = STT_FAN ? on_ : off_;
+	jsStatus["LIGHT"] = STT_LIGHT ? on_ : off_;
 	jsStatus["CMD_ID"] = "HW-" + String(now());;
 
 	String jsStatusStr;
@@ -467,9 +477,9 @@ void send_status_to_server() {
 	jsStatus.printTo(jsStatusStr);
 	mqtt_publish("Mushroom/Commands/" + HubID, jsStatusStr, true);
 
-	Blynk.virtualWrite(BL_PUMP1, stt_pump1);
-	Blynk.virtualWrite(BL_FAN, stt_fan);
-	Blynk.virtualWrite(BL_LIGHT, stt_light);
+	Blynk.virtualWrite(BL_PUMP1, STT_PUMP1);
+	Blynk.virtualWrite(BL_FAN, STT_FAN);
+	Blynk.virtualWrite(BL_LIGHT, STT_LIGHT);
 }
 
 bool skip_auto_light = false;
@@ -480,31 +490,31 @@ void auto_control() {
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
 	//+ PUMP1 tự tắt sau 1.5 phút
-	if ((millis() - t_pump1_change) > (90000)) {
+	if ((millis() - t_pump1_change) > (20000)) {
 		skip_auto_pump1 = false;
-		if (stt_pump1) {
+		if (STT_PUMP1) {
 			DEBUG.println("AUTO PUMP1 OFF");
 			control(PUMP1, false, true, false);
 		}
 	}
-	if ((millis() - t_pump2_change) > 90000) {
-		if (stt_pump2) {
+	if ((millis() - t_pump2_change) > 20000) {
+		if (STT_PUMP2) {
 			DEBUG.println("AUTO PUMP2 OFF");
 			control(PUMP2, false, true, false);
 		}
 	}
-	//+ FAN tự tắt sau 1 tiếng
-	if ((millis() - t_fan_change) > (1 * 1000 * SECS_PER_HOUR)) {
+	//+ FAN tự tắt sau 20 phút
+	if ((millis() - t_fan_change) > (20 * SECS_PER_MIN)) {
 		skip_auto_fan = false;
-		if (stt_fan) {
+		if (STT_FAN) {
 			DEBUG.println("AUTO FAN OFF");
 			control(FAN, false, true, false);
 		}
 	}
 	//+ LIGHT tự tắt sau 3 tiếng
-	if ((millis() - t_light_change) > (3 * 1000 * SECS_PER_HOUR)) {
+	if ((millis() - t_light_change) > (1 * 1000 * SECS_PER_HOUR)) {
 		skip_auto_light = false;
-		if (stt_light) {
+		if (STT_LIGHT) {
 			DEBUG.println("AUTO LIGHT OFF");
 			control(LIGHT, false, true, false);
 		}
@@ -537,7 +547,7 @@ void auto_control() {
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
-	if (!skip_auto_pump1 && library && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !stt_pump1) {
+	if (!skip_auto_pump1 && library && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump1_change) > 3600000) && !STT_PUMP1) {
 		DEBUG.println("AUTO PUMP1 ON");
 		control(PUMP1, true, true, false);
 		DEBUG.println("AUTO FAN ON");
@@ -546,7 +556,7 @@ void auto_control() {
 	//-------------------
 
 	//c. Bật tắt quạt
-	if (!skip_auto_fan && library && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) < 3600000) && !stt_fan) {
+	if (!skip_auto_fan && library && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) > 3600000) && !STT_FAN) {
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
 	}
@@ -573,19 +583,6 @@ void updateFirmware(String url) {
 		ESP.restart();
 		break;
 	}
-}
-
-void serial_command_handle() {
-	if (Serial.available()) {
-		String Scmd = Serial.readString();
-		Scmd.trim();
-		DEBUG.println(("\r\n>>>"));
-		DEBUG.println(Scmd);
-
-		control_handle(Scmd);
-	}
-
-	delay(1);
 }
 
 void control_handle(String cmd) {
@@ -621,6 +618,69 @@ void control_handle(String cmd) {
 		WiFi.disconnect();
 	}
 }
+//void control_stm32_message(String msg) {
+//	msg.trim();
+//	msg.toLowerCase();
+//	if (msg.startsWith("relay-status-all|HUB|")) {
+//		String STT = msg.substring(String("relay-status-all|HUB|").length());
+//		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+//		STT_PUMP1 = (STT[STM32_RELAY::PUMP1] == '1' ? true : false);
+//		STT_PUMP2 = (STT[STM32_RELAY::PUMP2] == '1' ? true : false);
+//		STT_FAN = (STT[STM32_RELAY::FAN] == '1' ? true : false);
+//		STT_LIGHT = (STT[STM32_RELAY::LIGHT] == '1' ? true : false);
+//		STT_WATER_IN = (STT[STM32_RELAY::WATER_IN] == '1' ? true : false);
+//	}
+//	else if (msg.startsWith("relay-status|HUB|")) {
+//		String RL = msg.substring(String("relay-status|HUB|").length());
+//		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+//		int relay = RL.toInt();
+//		String STT = RL.substring(RL.indexOf('|') + 1);
+//		char stt = STT[0];
+//		switch (relay)
+//		{
+//		case PUMP1:
+//			STT_PUMP1 = stt;
+//		case PUMP2:
+//			STT_PUMP2 = stt;
+//		case FAN:
+//			STT_FAN = stt;
+//		case LIGHT:
+//			STT_LIGHT = stt;
+//		case WATER_IN:
+//			STT_WATER_IN = stt;
+//		default:
+//			break;
+//		}
+//
+//		
+//	}
+//}
+
+void serial_command_handle() {
+	if (Serial.available()) {
+		String Scmd = Serial.readString();
+		Scmd.trim();
+		DEBUG.println(("\r\n>>>"));
+		DEBUG.println(Scmd);
+
+		control_handle(Scmd);
+	}
+
+	delay(1);
+}
+
+//void stm32_command_handle() {
+//	if (STM32.available()) {
+//		String Scmd = Serial.readString();
+//		Scmd.trim();
+//		DEBUG.println(("\r\n>>>"));
+//		DEBUG.println(Scmd);
+//
+//		control_stm32_message(Scmd);
+//	}
+//
+//	delay(1);
+//}
 
 #pragma endregion
 

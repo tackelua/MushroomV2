@@ -1,0 +1,110 @@
+/***************************************************************************
+ *
+ * @version: 0.2
+ * @author: bugith
+ * @handsome: unlimitted
+ *
+ ***************************************************************************/
+
+===============
+<< ~ ESP -> STM
+>> ~ STM -> ESP
+===============
+
+/***************************************************************************
+ *
+ * Điều khiển tất cả relay của một mạch xác định
+ * @param {id} : string - id của mạch cần điều khiển
+ * @param {stt..} : boolean - status của tất cả relay theo thứ tự
+ * @example : 
+ * <<
+ * set-relay-status-all|ABC123|1010101\r\n
+ * >>
+ * relay-status-all|ABC123|1010101\r\n
+ *
+ ***************************************************************************/
+<<
+set-relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+>>
+relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+
+
+/***************************************************************************
+ *
+ * Điều khiển 1 relay
+ * @param {id} : string - id của mạch cần điều khiển
+ * @param {relay} : int - số thứ tự của relay trên mạch, bắt đầu từ 1
+ * @param {status} : boolean - status của relay
+ * @example : 
+ * <<
+ * set-relay-status|ABC123|5|1\r\n
+ * >>
+ * relay-status|ABC123|5|1\r\n
+ *
+ ***************************************************************************/
+<<
+set-relay-status|{id}|{relay}|{status}\r\n
+>>
+relay-status|{id}|{relay}|{status}\r\n
+
+
+/***************************************************************************
+ *
+ * Lấy trạng thái của tất cả relay từ 1 mạch xác định
+ * @param {id} : string - id của mạch cần giao tiếp
+ * @param {stt..} : boolean - status của tất cả relay theo thứ tự
+ * @example : 
+ * <<
+ * get-relay-status-all|ABC123\r\n
+ * >>
+ * relay-status-all|ABC123|1010101\r\n
+ *
+ ***************************************************************************/
+//Get relay status all
+<<
+get-relay-status-all|{id}\r\n
+>>
+relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+
+
+/***************************************************************************
+ *
+ * Lấy trạng thái của tất cả sensor từ 1 mạch xác định
+ * @param {id} : string - id của mạch cần giao tiếp
+ * @param {type} : char - kiểu của sensor
+ *                        |-- t{idx}= : temperature
+ *                        |-- h{idx}= : humidity
+ *                        |-- l{idx}= : light
+ *                        |-- w{idx}=: water high limit
+ *                        |-- w{idx}=: water low limit
+ * @param {value} : float - giá trị của cảm biến
+ * @example : 
+ * <<
+ * get-sensor-all|ABC123\r\n
+ * >>
+ * sensor-all|ABC123|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
+ *
+ ***************************************************************************/
+<<
+get-sensor-all|{id}\r\n
+>>
+sensor-all|{id}|{type}{value}|...\r\n
+
+
+/***************************************************************************
+ *
+ * Time
+ * @param {hour}   : int - current hour
+ * @param {minute} : int - current minute
+ * @param {second} : int - current second
+ * @example : 
+ * <<
+ * set-time|23|34|50\r\n
+ * >>
+ * time|23|34|50\r\n
+ *
+ ***************************************************************************/
+>>
+set-time|{hour}|{minute}|{second}\r\n
+<<
+time|{hour}|{minute}|{second}\r\n

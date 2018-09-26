@@ -27,7 +27,7 @@ int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
 bool library = false;
 
 extern String timeStr;
-extern bool stt_pump1, stt_fan, stt_light;
+extern bool STT_PUMP1, STT_FAN, STT_LIGHT;
 extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
 extern void send_status_to_server();
 extern void hc595_digitalWrite(int pin, bool status);
@@ -178,9 +178,10 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		StaticJsonBuffer<250> jsonBuffer;
 		JsonObject& terminal = jsonBuffer.parseObject(mqtt_Message);
 		/*
+		Mushroom/Terminal
 		{
 		   "Command" : "FOTA",
-		   "HUB_ID" : "all",
+		   "Hub_ID" : "all",
 		   "Version" : "",
 		   "Url" : ""
 		}

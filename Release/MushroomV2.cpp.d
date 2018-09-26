@@ -59,11 +59,20 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/debug.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/pins_arduino.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/../generic/common.h \
- C:\Users\tacke\Documents\Arduino\libraries\WiFiManager/WiFiManager.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFi.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/wl_definitions.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Adafruit_Sensor/Adafruit_Sensor.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Print.h \
+ C:\Users\tacke\Documents\Arduino\libraries\DHT-sensor-library/DHT_U.h \
+ C:\Users\tacke\Documents\Arduino\libraries\DHT-sensor-library/DHT.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\DNSServer\src/DNSServer.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiUdp.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Udp.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/IPAddress.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Printable.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/slist.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src/ESP8266WebServerSecure.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src/ESP8266WebServer.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFi.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/wl_definitions.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiType.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/queue.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiSTA.h \
@@ -71,7 +80,6 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiAP.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiScan.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiClient.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Print.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Client.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/IPAddress.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/slist.h \
@@ -80,12 +88,9 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiServerSecure.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiClientSecure.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/ssl.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src/ESP8266WebServer.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src/detail/RequestHandler.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\DNSServer\src/DNSServer.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiUdp.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Udp.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/slist.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiServerSecure.h \
+ C:\Users\tacke\Documents\Arduino\libraries\WiFiManager/WiFiManager.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/user_interface.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/os_type.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/ets_sys.h \
@@ -112,6 +117,7 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/spi_flash.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/gpio.h \
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkSimpleEsp8266.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/version.h \
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkApiArduino.h \
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkApi.h \
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkConfig.h \
@@ -149,8 +155,8 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\Wire/Wire.h \
  C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h \
  C:\Users\tacke\Documents\Arduino\libraries\pubsubclient\src/PubSubClient.h \
- C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
+ C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/version.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/DynamicJsonBuffer.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/JsonBufferBase.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Deserialization/JsonParser.hpp \
@@ -227,4 +233,5 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/isInteger.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseFloat.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseInteger.hpp \
- C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Serialization/JsonSerializerImpl.hpp
+ C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Serialization/JsonSerializerImpl.hpp \
+ C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h

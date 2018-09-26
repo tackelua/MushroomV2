@@ -1,4 +1,10 @@
-﻿#include <WiFiManager.h>
+﻿#include <Adafruit_Sensor.h>
+#include <DHT_U.h>
+#include <DHT.h>
+#include <DNSServer.h>
+#include <ESP8266WebServerSecure.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>
 #define BLYNK_PRINT Serial
 #include <BlynkSimpleEsp8266.h>
 #include <Button.h>
@@ -15,6 +21,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
 
 //#define USE_OLED
@@ -23,20 +30,23 @@
 #include <qrcode.h>
 #endif // USE_OLED
 
-#define __VERSION__	"2.1.16"
+#define __VERSION__	"2.1.18"
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
+
+//HardwareSerial STM32_Serial = Serial;
+//#define STM32 STM32_Serial
 
 //WiFiManager wifiManager;
 Button myBtn(PININ_BUTTON, true, true, 20);
 
 
-bool STT_PUMP1 = false;
-bool STT_PUMP2 = false;
-bool STT_WATER_IN = false;
-bool STT_FAN = false;
-bool STT_LIGHT = false;
-bool STT_LED_STATUS = false;
+bool STT_PUMP1 = true;
+bool STT_PUMP2 = true;
+bool STT_WATER_IN = true;
+bool STT_FAN = true;
+bool STT_LIGHT = true;
+bool STT_LED_STATUS = true;
 
 
 //void DEBUG.print(String x, bool isSendToMQTT = false);
