@@ -17,12 +17,10 @@
   <ItemGroup>
     <None Include="MushroomV2.ino" />
     <None Include="functions.ino" />
-    <None Include="oled.ino" />
     <None Include="requirements_firmware_mushroom.docx">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="blynk.ino" />
-    <None Include="wifiManager.ino" />
     <None Include="SmartMushroomV2.pdf">
       <Filter>Resource Files</Filter>
     </None>
@@ -31,33 +29,15 @@
     <ClInclude Include="__vm\.MushroomV2.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BH1750.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hardware.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mqtt_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Screen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Sensor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BH1750.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mqtt_helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Screen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sensor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

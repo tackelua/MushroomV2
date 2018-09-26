@@ -111,7 +111,5 @@ typedef long __PTRDIFF_TYPE__;
 #include "MushroomV2.ino"
 #include "blynk.ino"
 #include "functions.ino"
-#include "oled.ino"
-#include "wifiManager.ino"
 #endif
 #endif

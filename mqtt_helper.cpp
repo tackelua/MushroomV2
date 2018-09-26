@@ -146,7 +146,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 
 	String topicStr = topic;
 
-	DEBUG.println(("\r\n>>>"));
+	DEBUG.println(("\r\nMQTT>>>"));
 	//DEBUG.println(topicStr);
 	DEBUG.print(("Message arrived: "));
 	DEBUG.print(topicStr);
@@ -249,7 +249,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 
 void mqtt_reconnect() {  // Loop until we're reconnected
 	while (!mqtt_client.connected()) {
-		DEBUG.print(("Attempting MQTT connection..."));
+		DEBUG.print(("\r\nAttempting MQTT connection..."));
 		//boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
 		if (mqtt_client.connect(HubID.c_str(), mqtt_user, mqtt_password, ("Mushroom/Status/" + HubID).c_str(), 0, true, String("{\"HUB_ID\":\"" + HubID + "\",\"STATUS\":\"OFFLINE\"}").c_str())) {
 			DEBUG.print((" Connected."));
@@ -288,21 +288,21 @@ void mqtt_loop() {
 		mqtt_reconnect();
 	}
 	mqtt_client.loop();
-	delay(1);
+	yield();
 }
 
 bool mqtt_publish(String topic, String payload, bool retain) {
 	if (!mqtt_client.connected()) {
 		return false;
 	}
-	DEBUG.print(("MQTT publish to topic: "));
+	DEBUG.print(("MQTT<<<  "));
 	DEBUG.println(topic);
 	DEBUG.println(payload);
 	DEBUG.println();
 
 	digitalWrite(LED_BUILTIN, ON);
 	bool ret = mqtt_client.publish(topic.c_str(), payload.c_str(), retain);
-	delay(1);
+	yield();
 	digitalWrite(LED_BUILTIN, OFF);
 	return ret;
 }

@@ -59,10 +59,6 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/debug.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/pins_arduino.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/../generic/common.h \
- C:\Users\tacke\Documents\Arduino\libraries\Adafruit_Sensor/Adafruit_Sensor.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Print.h \
- C:\Users\tacke\Documents\Arduino\libraries\DHT-sensor-library/DHT_U.h \
- C:\Users\tacke\Documents\Arduino\libraries\DHT-sensor-library/DHT.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\DNSServer\src/DNSServer.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiUdp.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Udp.h \
@@ -80,6 +76,7 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiAP.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/ESP8266WiFiScan.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiClient.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Print.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Client.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/IPAddress.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/slist.h \
@@ -90,70 +87,12 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/include/ssl.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WebServer\src/detail/RequestHandler.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiServerSecure.h \
- C:\Users\tacke\Documents\Arduino\libraries\WiFiManager/WiFiManager.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/user_interface.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/os_type.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/ets_sys.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/ip_addr.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/opt.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwipopts.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/gluedebug.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/debug.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/arch.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/arch/cc.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip-err-t.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/mem.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/gluedebug.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/libc/xtensa-lx106-elf/include/limits.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/arch/cc.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip-git-hash.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/libc/xtensa-lx106-elf/include/sys/time.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/debug.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/def.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/ip4_addr.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/ip6_addr.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/lwip2/include/lwip/def.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/queue.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/spi_flash.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/gpio.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkSimpleEsp8266.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/version.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkApiArduino.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkApi.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkConfig.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkDetectDevice.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkDebug.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/os_type.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkParam.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkTimer.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkHandlers.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkProtocolDefs.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkProtocol.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/utility/BlynkUtility.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Adapters/BlynkArduinoClient.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkWidgets.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetLED.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkWidgetBase.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetLCD.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTerminal.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetBridge.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTimeInput.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/utility/BlynkDateTime.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTable.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetGPS.h \
- C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetMap.h \
- C:\Users\tacke\Documents\Arduino\libraries\Button/Button.h \
  C:\Users\tacke\Documents\Arduino\libraries\Time/TimeLib.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/libc/xtensa-lx106-elf/include/Time.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/libc/xtensa-lx106-elf/include/machine/time.h \
- C:\Users\tacke\Documents\Arduino\libraries\SHT1x/SHT1x.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266httpUpdate\src/ESP8266httpUpdate.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiClient.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266HTTPClient\src/ESP8266HTTPClient.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\hardware.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Sensor.h \
- C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\Wire/Wire.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h \
  C:\Users\tacke\Documents\Arduino\libraries\pubsubclient\src/PubSubClient.h \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/version.hpp \
@@ -234,4 +173,34 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseFloat.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Polyfills/parseInteger.hpp \
  C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Serialization/JsonSerializerImpl.hpp \
- C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h
+ C:\Users\tacke\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkSimpleEsp8266.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/version.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkApiArduino.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkApi.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkConfig.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkDetectDevice.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkDebug.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/os_type.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/ets_sys.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1/tools/sdk/include/mem.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkParam.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkTimer.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkHandlers.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkProtocolDefs.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkProtocol.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/utility/BlynkUtility.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Adapters/BlynkArduinoClient.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/BlynkWidgets.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetLED.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/Blynk/BlynkWidgetBase.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetLCD.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTerminal.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetBridge.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTimeInput.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/utility/BlynkDateTime.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetTable.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetGPS.h \
+ C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetMap.h \
+ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\hardware.h \
+ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h

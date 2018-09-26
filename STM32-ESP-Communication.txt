@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * @version: 0.2
+ * @version: 0.3
  * @author: bugith
  * @handsome: unlimitted
  *
@@ -11,6 +11,23 @@
 >> ~ STM -> ESP
 ===============
 
+
+/***************************************************************************
+ *
+ * Set Hub ID
+ * @param {id} : string[6] - id của mạch, 
+ * @example : 
+ * <<
+ * cmd:set-hub-id|ABC123|5|1\r\n
+ * >>
+ * res:hub-id|ABC123|5|1\r\n
+ *
+ ***************************************************************************/
+<<
+cmd:set-hub-id|{id}\r\n
+>>
+res:hub-id|{id}\r\n
+
 /***************************************************************************
  *
  * Điều khiển tất cả relay của một mạch xác định
@@ -18,15 +35,15 @@
  * @param {stt..} : boolean - status của tất cả relay theo thứ tự
  * @example : 
  * <<
- * set-relay-status-all|ABC123|1010101\r\n
+ * cmd:set-relay-status-all|ABC123|1010101\r\n
  * >>
- * relay-status-all|ABC123|1010101\r\n
+ * res:relay-status-all|ABC123|1010101\r\n
  *
  ***************************************************************************/
 <<
-set-relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+cmd:set-relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
 >>
-relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+res:relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
 
 
 /***************************************************************************
@@ -37,15 +54,15 @@ relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
  * @param {status} : boolean - status của relay
  * @example : 
  * <<
- * set-relay-status|ABC123|5|1\r\n
+ * cmd:set-relay-status|ABC123|5|1\r\n
  * >>
- * relay-status|ABC123|5|1\r\n
+ * res:relay-status|ABC123|5|1\r\n
  *
  ***************************************************************************/
 <<
-set-relay-status|{id}|{relay}|{status}\r\n
+cmd:set-relay-status|{id}|{relay}|{status}\r\n
 >>
-relay-status|{id}|{relay}|{status}\r\n
+res:relay-status|{id}|{relay}|{status}\r\n
 
 
 /***************************************************************************
@@ -55,16 +72,16 @@ relay-status|{id}|{relay}|{status}\r\n
  * @param {stt..} : boolean - status của tất cả relay theo thứ tự
  * @example : 
  * <<
- * get-relay-status-all|ABC123\r\n
+ * cmd:get-relay-status-all|ABC123\r\n
  * >>
- * relay-status-all|ABC123|1010101\r\n
+ * res:relay-status-all|ABC123|1010101\r\n
  *
  ***************************************************************************/
 //Get relay status all
 <<
-get-relay-status-all|{id}\r\n
+cmd:get-relay-status-all|{id}\r\n
 >>
-relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
+res:relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
 
 
 /***************************************************************************
@@ -80,15 +97,15 @@ relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
  * @param {value} : float - giá trị của cảm biến
  * @example : 
  * <<
- * get-sensor-all|ABC123\r\n
+ * cmd:get-sensor-all|ABC123\r\n
  * >>
- * sensor-all|ABC123|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
+ * res:-sensor-all|ABC123|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
  *
  ***************************************************************************/
 <<
-get-sensor-all|{id}\r\n
+cmd:get-sensor-all|{id}\r\n
 >>
-sensor-all|{id}|{type}{value}|...\r\n
+res:sensor-all|{id}|{type}{value}|...\r\n
 
 
 /***************************************************************************
@@ -105,6 +122,6 @@ sensor-all|{id}|{type}{value}|...\r\n
  *
  ***************************************************************************/
 >>
-set-time|{hour}|{minute}|{second}\r\n
+cmd:get-time\r\n
 <<
-time|{hour}|{minute}|{second}\r\n
+cmd:set-time|{hour}|{minute}|{second}\r\n

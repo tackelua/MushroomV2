@@ -1,6 +1,8 @@
 ﻿float temp;
 float humi;
 int light;
+bool water_high;
+bool water_low;
 
 unsigned long t_pump1_change, t_pump2_change, t_fan_change, t_light_change;
 String CMD_ID = "         ";
@@ -49,6 +51,7 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
+	WiFi.begin("MIC", "");
 	DEBUG.println();
 	WiFi.printDiag(Serial);
 	DEBUG.println();
@@ -101,7 +104,7 @@ String http_request(String host, uint16_t port = 80, String url = "/") {
 			client.stop();
 			return "";
 		}
-		delay(1);
+		yield();
 	}
 
 	// Read all the lines of the reply from server and print them to Serial
@@ -128,7 +131,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 	if (!WiFi.isConnected()) {
 		return;
 	}
-	delay(1);
+	yield();
 	static unsigned long t_pre_update = 0;
 	static bool wasSync = false;
 	if (interval == 0) {
@@ -148,6 +151,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 					setTime(ts);
 					adjustTime(7 * SECS_PER_HOUR);
 					Serial.println(("Time Updated\r\n"));
+					send_time_to_stm32();
 					return;
 				}
 			}
@@ -165,6 +169,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 				setTime(ts);
 				adjustTime(7 * SECS_PER_HOUR);
 				Serial.println(("Time Updated\r\n"));
+				send_time_to_stm32();
 				return;
 			}
 		}
@@ -177,7 +182,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 	if (!wasSync) {
 		updateTimeStamp();
 	}
-	delay(1);
+	yield();
 }
 
 String make_status_string_to_stm32() {
@@ -190,8 +195,8 @@ void stm32_digitalWrite(int pin, bool status) {
 	//Serial.println(pin);
 	//Serial.print("status = ");
 	//Serial.println(status);
-	String c = "set-relay-status-all|HUB|" + make_status_string_to_stm32();
-	STM32.println(c);
+	String c = "cmd:set-relay-status-all|HUB|" + make_status_string_to_stm32();
+	send_message_to_stm32(c);
 }
 
 bool create_logs(String relayName, bool status, bool isCommandFromApp) {
@@ -289,6 +294,21 @@ void send_status_to_server() {
 	Blynk.virtualWrite(BL_LIGHT, STT_LIGHT);
 }
 
+void send_message_to_stm32(String cmd) {
+	delay(10);
+	DEBUG.println("\r\nSTM32<<<");
+	STM32.println(cmd);
+	delay(50);
+	//DEBUG.println();
+}
+
+void send_time_to_stm32() {
+	if (timeStatus() == timeSet) {
+		String t = "cmd:set-time|" + String(hour()) + "|" + String(minute()) + "|" + String(second());
+		send_message_to_stm32(t);
+	}
+}
+
 bool skip_auto_light = false;
 bool skip_auto_pump1 = false;
 bool skip_auto_fan = false;
@@ -367,7 +387,7 @@ void auto_control() {
 		DEBUG.println("AUTO FAN ON");
 		control(FAN, true, true, false);
 	}
-	delay(1);
+	yield();
 }
 
 void updateFirmware(String url) {
@@ -393,52 +413,75 @@ void updateFirmware(String url) {
 }
 
 void control_handle(String cmd) {
-	cmd.toUpperCase();
-	if (cmd.indexOf("LIGHT ON") > -1) {
-		skip_auto_light = true;
-		control(LIGHT, true, true, true);
-	}
-	if (cmd.indexOf("LIGHT OFF") > -1) {
-		skip_auto_light = true;
-		control(LIGHT, false, true, true);
-	}
+	if (cmd.startsWith("/")) {
+		cmd.toUpperCase();
+		if (cmd.indexOf("LIGHT ON") > -1) {
+			skip_auto_light = true;
+			control(LIGHT, true, true, true);
+		}
+		if (cmd.indexOf("LIGHT OFF") > -1) {
+			skip_auto_light = true;
+			control(LIGHT, false, true, true);
+		}
 
-	if (cmd.indexOf("MIST ON") > -1) {
-		skip_auto_pump1 = true;
-		control(PUMP1, true, true, true);
-	}
-	if (cmd.indexOf("MIST OFF") > -1) {
-		skip_auto_pump1 = true;
-		control(PUMP1, false, true, true);
-	}
+		if (cmd.indexOf("MIST ON") > -1) {
+			skip_auto_pump1 = true;
+			control(PUMP1, true, true, true);
+		}
+		if (cmd.indexOf("MIST OFF") > -1) {
+			skip_auto_pump1 = true;
+			control(PUMP1, false, true, true);
+		}
 
-	if (cmd.indexOf("FAN ON") > -1) {
-		skip_auto_fan = true;
-		control(FAN, true, true, true);
+		if (cmd.indexOf("FAN ON") > -1) {
+			skip_auto_fan = true;
+			control(FAN, true, true, true);
+		}
+		if (cmd.indexOf("FAN OFF") > -1) {
+			skip_auto_fan = true;
+			control(FAN, false, true, true);
+		}
+		if (cmd.indexOf("RESET WIFI") > -1) {
+			DEBUG.println(("Reset Wifi"));
+			WiFi.disconnect();
+		}
 	}
-	if (cmd.indexOf("FAN OFF") > -1) {
-		skip_auto_fan = true;
-		control(FAN, false, true, true);
+}
+
+String stm32_msg_get_params(String msg, String params) {
+	//res:sensor-all|ABC123|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
+	msg.trim();
+	int idx = msg.indexOf(params);
+	String data;
+	if (idx > 0) {
+		data = msg.substring(idx + params.length() + 1); //+1 cho dấu bằng
+		data = data.substring(0, data.indexOf('|'));
 	}
-	if (cmd.indexOf("RESET WIFI") > -1) {
-		DEBUG.println(("Reset Wifi"));
-		WiFi.disconnect();
-	}
+	return data;
 }
 void control_stm32_message(String msg) {
 	msg.trim();
 	msg.toLowerCase();
-	if (msg.startsWith("relay-status-all|HUB|")) {
-		String STT = msg.substring(String("relay-status-all|HUB|").length());
+	if (msg.startsWith("res:relay-status-all|HUB|")) {
+		String STT = msg.substring(String("res:relay-status-all|HUB|").length());
 		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-		STT_PUMP1 = (STT[STM32_RELAY::PUMP1] == '1' ? true : false);
-		STT_PUMP2 = (STT[STM32_RELAY::PUMP2] == '1' ? true : false);
-		STT_FAN = (STT[STM32_RELAY::FAN] == '1' ? true : false);
-		STT_LIGHT = (STT[STM32_RELAY::LIGHT] == '1' ? true : false);
-		STT_WATER_IN = (STT[STM32_RELAY::WATER_IN] == '1' ? true : false);
+		if (STT[STM32_RELAY::PUMP1] == '1') STT_PUMP1 = true;
+		else if (STT[STM32_RELAY::PUMP1] == '0') STT_PUMP1 = false;
+
+		if (STT[STM32_RELAY::PUMP2] == '1') STT_PUMP2 = true;
+		else if (STT[STM32_RELAY::PUMP2] == '0') STT_PUMP2 = false;
+
+		if (STT[STM32_RELAY::FAN] == '1') STT_FAN = true;
+		else if (STT[STM32_RELAY::FAN] == '0') STT_FAN = false;
+
+		if (STT[STM32_RELAY::LIGHT] == '1') STT_LIGHT = true;
+		else if (STT[STM32_RELAY::LIGHT] == '0') STT_LIGHT = false;
+
+		if (STT[STM32_RELAY::WATER_IN] == '1') STT_WATER_IN = true;
+		else if (STT[STM32_RELAY::WATER_IN] == '0') STT_WATER_IN = false;
 	}
-	else if (msg.startsWith("relay-status|HUB|")) {
-		String RL = msg.substring(String("relay-status|HUB|").length());
+	else if (msg.startsWith("res:relay-status|HUB|")) {
+		String RL = msg.substring(String("res:relay-status|HUB|").length());
 		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
 		int relay = RL.toInt();
 		String STT = RL.substring(RL.indexOf('|') + 1);
@@ -447,48 +490,94 @@ void control_stm32_message(String msg) {
 		{
 		case PUMP1:
 			STT_PUMP1 = stt;
+			break;
 		case PUMP2:
 			STT_PUMP2 = stt;
+			break;
 		case FAN:
 			STT_FAN = stt;
+			break;
 		case LIGHT:
 			STT_LIGHT = stt;
+			break;
 		case WATER_IN:
 			STT_WATER_IN = stt;
+			break;
 		default:
 			break;
 		}
+	}
+	else if (msg.startsWith("res:sensor-all|HUB|")) {
+		//res:sensor-all|HUB|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
+		float t0 = stm32_msg_get_params(msg, "t0").toFloat();
+		if (t0 != 0) {
+			temp = t0;
+		}
 
-		
+		float h0 = stm32_msg_get_params(msg, "h0").toFloat();
+		if (h0 != 0) {
+			humi = h0;
+		}
+
+		int l0 = stm32_msg_get_params(msg, "l0").toInt();
+		if (l0 != 0) {
+			light = l0;
+		}
+
+		bool w0 = stm32_msg_get_params(msg, "w0").toInt();
+		if (w0 != 0) {
+			water_low = w0;
+		}
+
+		bool w1 = stm32_msg_get_params(msg, "w1").toInt();
+		if (w1 != 0) {
+			water_high = w1;
+		}
+	}
+	else if (msg.startsWith("cmd:get-time")) {
+		//cmd:get-time\r\n
+		send_time_to_stm32();
 	}
 }
 
-void serial_command_handle() {
-	if (Serial.available()) {
-		String Scmd = Serial.readString();
-		Scmd.trim();
-		DEBUG.println(("\r\n>>>"));
-		DEBUG.println(Scmd);
-
-		control_handle(Scmd);
-	}
-
-	delay(1);
-}
+//void serial_command_handle() {
+//	if (Serial.available()) {
+//		String Scmd = Serial.readString();
+//		Scmd.trim();
+//		DEBUG.println(("\r\n>>>"));
+//		DEBUG.println(Scmd);
+//		DEBUG.println();
+//
+//		control_handle(Scmd);
+//	}
+//	yield();
+//}
 
 void stm32_command_handle() {
 	if (STM32.available()) {
 		String Scmd = Serial.readString();
 		Scmd.trim();
-		DEBUG.println(("\r\n>>>"));
+		DEBUG.println(("\r\nSTM32>>>"));
 		DEBUG.println(Scmd);
+		//DEBUG.println();
 
 		control_stm32_message(Scmd);
+		control_handle(Scmd);
 	}
-
-	delay(1);
+	yield();
 }
 
+void get_data_sensor(unsigned long interval) {
+	static unsigned long t = -1;
+	if (millis() - t > interval) {
+		t = millis();
+		send_message_to_stm32("cmd:get-sensor-all|HUB");
+	}
+
+}
+void set_hub_id_to_stm32(String id) {
+	send_message_to_stm32("cmd:set-hub-id|" + id);
+}
 #pragma endregion
 
 
