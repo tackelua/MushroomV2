@@ -11,7 +11,7 @@ String CMD_ID = "         ";
 #pragma region functions
 bool ledStt = false;
 bool smart_config() {
-	Serial.println(("SmartConfig started."));
+	DEBUG.println(("SmartConfig started."));
 	unsigned long t = millis();
 	WiFi.beginSmartConfig();
 	while (1) {
@@ -19,15 +19,15 @@ bool smart_config() {
 		digitalWrite(LED_BUILTIN, ledStt);
 		delay(200);
 		if (WiFi.smartConfigDone()) {
-			Serial.println(("SmartConfig: Success"));
-			Serial.print(("RSSI: "));
-			Serial.println(WiFi.RSSI());
+			DEBUG.println(("SmartConfig: Success"));
+			DEBUG.print(("RSSI: "));
+			DEBUG.println(WiFi.RSSI());
 			WiFi.printDiag(Serial);
 			WiFi.stopSmartConfig();
 			break;
 		}
 		if ((millis() - t) > (5 * 60000)) {
-			Serial.println(("ESP restart"));
+			DEBUG.println(("ESP restart"));
 			ESP.restart();
 			return false;
 		}
@@ -36,13 +36,13 @@ bool smart_config() {
 	WiFi.reconnect();
 	if (WiFi.waitForConnectResult() == WL_CONNECTED)
 	{
-		Serial.println(("connected\n"));
-		Serial.print(("IP: "));
-		Serial.println(WiFi.localIP());
+		DEBUG.println(("connected\n"));
+		DEBUG.print(("IP: "));
+		DEBUG.println(WiFi.localIP());
 		return true;
 	}
 	else {
-		Serial.println(("SmartConfig Fail\n"));
+		DEBUG.println(("SmartConfig Fail\n"));
 	}
 	return false;
 }
@@ -86,11 +86,11 @@ void wifi_loop() {
 extern PubSubClient mqtt_client;
 
 String http_request(String host, uint16_t port = 80, String url = "/") {
-	Serial.println("\r\nGET " + host + ":" + String(port) + url);
+	DEBUG.println("\r\nGET " + host + ":" + String(port) + url);
 	WiFiClient client;
 	client.setTimeout(100);
 	if (!client.connect(host.c_str(), port)) {
-		Serial.println("connection failed");
+		DEBUG.println("connection failed");
 		delay(1000);
 		return "";
 	}
@@ -100,7 +100,7 @@ String http_request(String host, uint16_t port = 80, String url = "/") {
 	unsigned long timeout = millis();
 	while (client.available() == 0) {
 		if (millis() - timeout > 2000) {
-			Serial.println(">>> Client Timeout !");
+			DEBUG.println(">>> Client Timeout !");
 			client.stop();
 			return "";
 		}
@@ -110,10 +110,10 @@ String http_request(String host, uint16_t port = 80, String url = "/") {
 	// Read all the lines of the reply from server and print them to Serial
 	//while (client.available()) {
 	//	String line = client.readStringUntil('\r');
-	//	Serial.print(line);
+	//	DEBUG.print(line);
 	//}
-	//Serial.println();
-	//Serial.println();
+	//DEBUG.println();
+	//DEBUG.println();
 	String body;
 	if (client.available()) {
 		body = client.readString();
@@ -136,29 +136,29 @@ void updateTimeStamp(unsigned long interval = 0) {
 	static bool wasSync = false;
 	if (interval == 0) {
 		{
-			Serial.println(("Update timestamp"));
-			String strTimeStamp = http_request("date.jsontest.com");
-			Serial.println(strTimeStamp);
-			DynamicJsonBuffer timestamp(500);
-			JsonObject& jsTimeStamp = timestamp.parseObject(strTimeStamp);
-			if (jsTimeStamp.success()) {
-				String tt = jsTimeStamp["milliseconds_since_epoch"].asString();
-				tt = tt.substring(0, tt.length() - 3);
-				long ts = tt.toInt();
-				if (ts > 1000000000) {
-					t_pre_update = millis();
-					wasSync = true;
-					setTime(ts);
-					adjustTime(7 * SECS_PER_HOUR);
-					Serial.println(("Time Updated\r\n"));
-					send_time_to_stm32();
-					return;
-				}
+			DEBUG.println(("Update timestamp"));
+			String strTimeStamp;
+			strTimeStamp = http_request("gith.cf", 80, "/timestamp");
+			int ln = strTimeStamp.indexOf("\r\n");
+			if (ln > -1) {
+				strTimeStamp = strTimeStamp.substring(ln + 2);
+			}
+			DEBUG.println(strTimeStamp);
+			strTimeStamp.trim();
+			long ts = strTimeStamp.toInt();
+			if (ts > 1000000000) {
+				t_pre_update = millis();
+				wasSync = true;
+				setTime(ts);
+				adjustTime(7 * SECS_PER_HOUR);
+				DEBUG.println(("Time Updated\r\n"));
+				send_time_to_stm32();
+				return;
 			}
 		}
 
 		String strTimeStamp = http_request("mic.duytan.edu.vn", 88, "/api/GetUnixTime");
-		Serial.println(strTimeStamp);
+		DEBUG.println(strTimeStamp);
 		DynamicJsonBuffer timestamp(500);
 		JsonObject& jsTimeStamp = timestamp.parseObject(strTimeStamp);
 		if (jsTimeStamp.success()) {
@@ -168,7 +168,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 				wasSync = true;
 				setTime(ts);
 				adjustTime(7 * SECS_PER_HOUR);
-				Serial.println(("Time Updated\r\n"));
+				DEBUG.println(("Time Updated\r\n"));
 				send_time_to_stm32();
 				return;
 			}
@@ -185,16 +185,47 @@ void updateTimeStamp(unsigned long interval = 0) {
 	yield();
 }
 
+void update_sensor(unsigned long period) {
+	StaticJsonBuffer<200> jsBuffer;
+	JsonObject& jsData = jsBuffer.createObject();
+	jsData["HUB_ID"] = HubID;
+	jsData["TEMP"] = (abs(temp) > 200.0 ? -1 : (int)temp);
+	jsData["HUMI"] = (abs(humi) > 200.0 ? -1 : (int)humi);
+	jsData["LIGHT"] = light == 1024 ? -1 : light;
+
+	bool waterEmpty = water_low;
+	jsData["WATER_EMPTY"] = waterEmpty ? "YES" : "NO";
+
+	int dBm = WiFi.RSSI();
+	int quality;
+	if (dBm <= -100)
+		quality = 0;
+	else if (dBm >= -50)
+		quality = 100;
+	else
+		quality = 2 * (dBm + 100);
+	jsData["RSSI"] = quality;
+
+	String data;
+	data.reserve(120);
+	jsData.printTo(data);
+	mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
+
+	Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
+	Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
+	Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
+}
+
 String make_status_string_to_stm32() {
 	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
 	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT) + String(STT_WATER_IN);
 	return s;
 }
 void stm32_digitalWrite(int pin, bool status) {
-	//Serial.print("pin = ");
-	//Serial.println(pin);
-	//Serial.print("status = ");
-	//Serial.println(status);
+	//DEBUG.print("pin = ");
+	//DEBUG.println(pin);
+	//DEBUG.print("status = ");
+	//DEBUG.println(status);
 	String c = "cmd:set-relay-status-all|HUB|" + make_status_string_to_stm32();
 	send_message_to_stm32(c);
 }
@@ -541,8 +572,8 @@ void control_stm32_message(String msg) {
 }
 
 //void serial_command_handle() {
-//	if (Serial.available()) {
-//		String Scmd = Serial.readString();
+//	if (DEBUG.available()) {
+//		String Scmd = DEBUG.readString();
 //		Scmd.trim();
 //		DEBUG.println(("\r\n>>>"));
 //		DEBUG.println(Scmd);
@@ -555,7 +586,7 @@ void control_stm32_message(String msg) {
 
 void stm32_command_handle() {
 	if (STM32.available()) {
-		String Scmd = Serial.readString();
+		String Scmd = DEBUG.readString();
 		Scmd.trim();
 		DEBUG.println(("\r\nSTM32>>>"));
 		DEBUG.println(Scmd);

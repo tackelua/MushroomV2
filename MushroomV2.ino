@@ -20,6 +20,7 @@ String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 //HardwareSerial STM32_Serial = Serial;
 #define STM32 Serial
+#define DEBUG Serial1
 
 bool STT_PUMP1 = true;
 bool STT_PUMP2 = true;
@@ -47,38 +48,25 @@ String HubID = getID();
 
 void setup()
 {
-	delay(1000);
-	Serial.begin(74880);
-	Serial.setTimeout(20);
-
-	//control(PUMP1, false, false, false);
-	//control(FAN, false, false, false);
-	//control(LIGHT, false, false, false);
-	//control(LED_BUILTIN, false, false, false);
-
-	Serial.println("HID=" + HubID);
-
-	Serial.println(("LED_BUILTIN ON"));
+	delay(5000);
+	STM32.begin(74880);
+	STM32.setTimeout(20);
+	DEBUG.begin(74880);
+	DEBUG.setTimeout(20);
+	DEBUG.setDebugOutput(true);
 
 	wifi_init();
-	Serial.print("RSSI: ");
-	Serial.println(WiFi.RSSI());
-
+	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, OFF);
-	Serial.println(("LED_BUILTIN OFF"));
 
-	//DEBUG.print(("IP: "));
-	//DEBUG.println(WiFi.localIP().toString());
 	DEBUG.print(("Firmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
-	Serial.print("ID = ");
-	Serial.println(HubID);
 	updateTimeStamp(0);
 	mqtt_init();
+
 	//blynk_init();
 	set_hub_id_to_stm32(HubID);
-
 }
 
 void loop()

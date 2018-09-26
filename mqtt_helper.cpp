@@ -43,17 +43,11 @@ void handleTopic__Mushroom_Commands_HubID() {
 	JsonObject& commands = jsonBuffer.parseObject(mqtt_Message);
 
 	String HUB_ID = commands["HUB_ID"].as<String>();
-	bool pump1_change = false;
-	bool fan_change = false;
-	bool light_change = false;
 
 	CMD_ID = commands["CMD_ID"].as<String>();
 	bool isCommandFromApp = false;
 	CMD_ID.trim();
 	if (CMD_ID.startsWith("HW-")) {
-		//DEBUG.print(("Command ID "));
-		//DEBUG.print(CMD_ID);
-		//DEBUG.print((" was excuted."));
 		static bool firsControlFromRetain = true;
 		if (!firsControlFromRetain) {
 			DEBUG.println(("Skipped\r\n"));
@@ -64,19 +58,20 @@ void handleTopic__Mushroom_Commands_HubID() {
 	else {
 		isCommandFromApp = true;
 	}
+
 	String pump1_stt = commands["MIST"].as<String>();
 	extern bool skip_auto_pump1;
 	if (pump1_stt == on_)
 	{
 		skip_auto_pump1 = true;
-		pump1_change = control(PUMP1, true, false, isCommandFromApp);
-		pump1_change = control(PUMP2, true, false, isCommandFromApp);
+		control(PUMP1, true, false, isCommandFromApp);
+		control(PUMP2, true, false, isCommandFromApp);
 	}
 	else if (pump1_stt == off_)
 	{
 		skip_auto_pump1 = true;
-		pump1_change = control(PUMP1, false, false, isCommandFromApp);
-		pump1_change = control(PUMP2, false, false, isCommandFromApp);
+		control(PUMP1, false, false, isCommandFromApp);
+		control(PUMP2, false, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
@@ -84,12 +79,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 	if (light_stt == on_)
 	{
 		skip_auto_light = true;
-		light_change = control(LIGHT, true, false, isCommandFromApp);
+		control(LIGHT, true, false, isCommandFromApp);
 	}
 	else if (light_stt == off_)
 	{
 		skip_auto_light = true;
-		light_change = control(LIGHT, false, false, isCommandFromApp);
+		control(LIGHT, false, false, isCommandFromApp);
 	}
 
 	String fan_stt = commands["FAN"].as<String>();
@@ -97,12 +92,12 @@ void handleTopic__Mushroom_Commands_HubID() {
 	if (fan_stt == on_)
 	{
 		skip_auto_fan = true;
-		fan_change = control(FAN, true, false, isCommandFromApp);
+		control(FAN, true, false, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
 		skip_auto_fan = true;
-		fan_change = control(FAN, false, false, isCommandFromApp);
+		control(FAN, false, false, isCommandFromApp);
 	}
 
 	if (isCommandFromApp) {
@@ -206,6 +201,25 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	}
 
 	if (topicStr == "Mushroom/Terminal/" + HubID) {
+		if (mqtt_Message == "/restart") {
+			mqtt_publish("Mushroom/Terminal/" + HubID, "Restarting");
+			DEBUG.println("\r\nRestart\r\n");
+			ESP.restart();
+			delay(100);
+		}
+		if (mqtt_Message.startsWith("/uf")) {
+			String url;
+			url = mqtt_Message.substring(3);
+			url.trim();
+
+			if (!url.startsWith("http")) {
+				url = "http://gith.cf/files/MushroomV2.bin";
+			}
+			mqtt_publish("Mushroom/Terminal/" + HubID, "Updating new firmware " + url);
+			DEBUG.print(("\nUpdating new firmware: "));
+			updateFirmware(url);
+			DEBUG.println(("DONE!"));
+		}
 		if (mqtt_Message.indexOf("/get version") > -1) {
 			//StaticJsonBuffer<200> jsBuffer;
 			DynamicJsonBuffer jsBuffer(200);
