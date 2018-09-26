@@ -6,28 +6,6 @@
 #include "BH1750.h"
 #include "hardware.h"
 
-#ifdef DHT
-DHT dht(DHTPIN, DHTTYPE);
-#endif // DHT
-
-#ifdef SHT
-SHT1x sht(SHT_dataPin, SHT_clockPin);
-#endif // SHT
-
-void sensor_init() {
-#ifdef DHT
-	dht.begin();
-#endif // DHT
-
-#ifdef BH1750
-	BH1750.INIT(BH1750_ADDRESS);
-#endif // BH1750
-
-#ifdef USED_LIGHT_SENSOR_ANALOG
-	pinMode(PININ_LIGHT_SENSOR, INPUT);
-#endif // USED_LIGHT_SENSOR_ANALOG
-}
-
 float readTemp() {
 #ifdef DHT
 	float t = dht.readTemperature();

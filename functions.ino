@@ -14,7 +14,7 @@ bool smart_config() {
 	WiFi.beginSmartConfig();
 	while (1) {
 		ledStt = !ledStt;
-		hc595_digitalWrite(LED_STATUS, ledStt);
+		digitalWrite(LED_BUILTIN, ledStt);
 		delay(200);
 		if (WiFi.smartConfigDone()) {
 			Serial.println(("SmartConfig: Success"));
@@ -28,14 +28,6 @@ bool smart_config() {
 			Serial.println(("ESP restart"));
 			ESP.restart();
 			return false;
-		}
-		myBtn.read();
-		if (myBtn.wasPressed()) {
-			Serial.println("Log out Smart Config");
-			WiFi.stopSmartConfig();
-			break;
-			//WiFi.waitForConnectResult();
-			//return false;
 		}
 	}
 
@@ -54,44 +46,12 @@ bool smart_config() {
 }
 
 void wifi_init() {
-	//WiFi.disconnect();
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
-	//WiFi.begin("MIC");
-
-	//Serial.println(("SmartConfig started."));
-	//WiFi.beginSmartConfig();
-	//while (1) {
-	//	delay(1000);
-	//	if (WiFi.smartConfigDone()) {
-	//		Serial.println(("SmartConfig: Success"));
-	//		WiFi.printDiag(Serial);
-	//		//WiFi.stopSmartConfig();
-	//		break;
-	//	}
-	//}
 	DEBUG.println();
 	WiFi.printDiag(Serial);
 	DEBUG.println();
-
-	//Serial.println(("\nConnecting..."));
-	//
-	//if (WiFi.waitForConnectResult() == WL_CONNECTED)
-	//{
-	//	Serial.println(("connected\n"));
-	//}
-	//else
-	//{
-	//	Serial.println(("connect again\n"));
-	//	if (WiFi.waitForConnectResult() == WL_CONNECTED)
-	//	{
-	//		Serial.println(("connected\n"));
-	//		return;
-	//	}
-	//
-	//	smart_config();
-	//}
 }
 
 void wifi_loop() {
@@ -121,46 +81,6 @@ void wifi_loop() {
 }
 
 extern PubSubClient mqtt_client;
-void led_loop() {
-	if (flag_SmartConfig) {
-		static unsigned long t = millis();
-		if ((millis() - t) > 100) {
-			t = millis();
-			ledStt = !ledStt;
-			hc595_digitalWrite(LED_STATUS, ledStt);
-		}
-	}
-	else if (!mqtt_client.connected()) { //loi ket noi den server
-		static unsigned long t = millis();
-		if ((millis() - t) > 1000) {
-			t = millis();
-			ledStt = !ledStt;
-			hc595_digitalWrite(LED_STATUS, ledStt);
-		}
-	}
-	else if (digitalRead(PININ_WATER_L)) { //water empty 
-		static unsigned long t = millis();
-		if (ledStt) {
-			if ((millis() - t) > 1000) {
-				t = millis();
-				ledStt = !ledStt;
-				hc595_digitalWrite(LED_STATUS, ledStt);
-			}
-		}
-		else {
-			if ((millis() - t) > 3000) {
-				t = millis();
-				ledStt = !ledStt;
-				hc595_digitalWrite(LED_STATUS, ledStt);
-			}
-		}
-	}
-	else { //normal
-		if (!ledStt) {
-			hc595_digitalWrite(LED_STATUS, ledStt);
-		}
-	}
-}
 
 String http_request(String host, uint16_t port = 80, String url = "/") {
 	Serial.println("\r\nGET " + host + ":" + String(port) + url);
@@ -259,133 +179,20 @@ void updateTimeStamp(unsigned long interval = 0) {
 	}
 	delay(1);
 }
-void update_sensor(unsigned long period) {
-	//check waterEmpty nếu thay đổi thì update ngay lập tức
-	static bool waterEmpty_old = false;
-	static bool waterEmpty_new;
-	waterEmpty_new = !digitalRead(PININ_WATER_L);
-	if (waterEmpty_new != waterEmpty_old) {
-		waterEmpty_old = waterEmpty_new;
-		update_sensor(0);
-	}
 
-	//update sensors data to server every period milli seconds
-	static unsigned long preMillis = millis();
-	if ((millis() - preMillis) > period) {
-		preMillis = millis();
-		temp = readTemp();
-		//
-		//mqtt_loop();
-		//serial_command_handle();
-		//
-		humi = readHumi();
-		//
-		//mqtt_loop();
-		//serial_command_handle();
-		//
-		light = readLight();
-		StaticJsonBuffer<200> jsBuffer;
-		JsonObject& jsData = jsBuffer.createObject();
-		jsData["HUB_ID"] = HubID;
-		jsData["TEMP"] = (abs(temp) > 200.0 ? -1 : (int)temp);
-		jsData["HUMI"] = (abs(humi) > 200.0 ? -1 : (int)humi);
-		jsData["LIGHT"] = light == 1024 ? -1 : light;
-
-		bool waterEmpty = digitalRead(PININ_WATER_L);
-		jsData["WATER_EMPTY"] = waterEmpty ? "YES" : "NO";
-
-		int dBm = WiFi.RSSI();
-		int quality;
-		if (dBm <= -100)
-			quality = 0;
-		else if (dBm >= -50)
-			quality = 100;
-		else
-			quality = 2 * (dBm + 100);
-		jsData["RSSI"] = quality;
-
-		String data;
-		data.reserve(120);
-		jsData.printTo(data);
-		mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
-
-		Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
-		Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
-		Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
-	}
+String make_status_string_to_stm32() {
+	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT) + String(STT_WATER_IN);
+	return s;
 }
-
-void hc595_digitalWrite(int pin, bool status) {
+void stm32_digitalWrite(int pin, bool status) {
 	//Serial.print("pin = ");
 	//Serial.println(pin);
 	//Serial.print("status = ");
 	//Serial.println(status);
-
-	static byte output = 0x00;
-	static byte pre_output = -1;
-
-	//8bit: const 0 - PUMP1 - PUMP2 - WATER_IN - FAN - LIGHT - LED_STATUS - const 0
-	byte out;
-	switch (pin)
-	{
-	case PUMP1:
-	case PUMP2:
-	case WATER_IN:
-	case FAN:
-	case LIGHT:
-		out = 0x01 << pin;
-		if (status) {
-			output |= out;
-		}
-		else {
-			output &= ~out;
-		}
-		break;
-	case LED_STATUS:
-		//if (status) {
-//  output = output | 0b01000000;
-//}
-//else {
-//  output = output & 0b10111111;
-//}
-		ledStt = status;
-		out = 0x01 << pin;
-		if (!status) { //LED hiện tại alway off, on when signal. -> alway on, off when signal
-			output |= out;
-		}
-		else {
-			output &= ~out;
-		}
-		break;
-	default:
-		break;
-	}
-
-	if (output != pre_output) {
-		pre_output = output;
-		digitalWrite(HC595_STCP, LOW);
-		shiftOut(HC595_DATA, HC595_SHCP, MSBFIRST, output);
-		//Note 3: MSBFIRST có thể đổi thành LSBFIRST và ngược lại.
-		digitalWrite(HC595_STCP, HIGH);
-	}
-	//Serial.print("OUT = ");
-	//Serial.println(output, BIN);
-	//Serial.println();
+	String c = "set-relay-status-all|HUB|" + make_status_string_to_stm32();
+	STM32.println(c);
 }
-
-//String make_status_string_to_stm32() {
-//	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-//	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT) + String(STT_WATER_IN);
-//	return s;
-//}
-//void stm32_digitalWrite(int pin, bool status) {
-//	//Serial.print("pin = ");
-//	//Serial.println(pin);
-//	//Serial.print("status = ");
-//	//Serial.println(status);
-//	String c = "set-relay-status-all|HUB|" + make_status_string_to_stm32();
-//	STM32.println(c);
-//}
 
 bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	StaticJsonBuffer<200> jsLogBuffer;
@@ -424,7 +231,7 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 		create_logs("Pump2", status, isCommandFromApp);
 		DEBUG.print(("PUMP2: "));
 		DEBUG.println(status ? "ON" : "OFF");
-		hc595_digitalWrite(pin, status ? ON : OFF);
+		stm32_digitalWrite(pin, status ? ON : OFF);
 		return true;
 	}
 	if ((pin == PUMP1) && (STT_PUMP1 != status)) {
@@ -453,7 +260,7 @@ bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp)
 	}
 
 	if (pin_change) {
-		hc595_digitalWrite(pin, status ? ON : OFF);
+		stm32_digitalWrite(pin, status ? ON : OFF);
 		if (update_to_server) {
 			send_status_to_server();
 		}
@@ -618,43 +425,43 @@ void control_handle(String cmd) {
 		WiFi.disconnect();
 	}
 }
-//void control_stm32_message(String msg) {
-//	msg.trim();
-//	msg.toLowerCase();
-//	if (msg.startsWith("relay-status-all|HUB|")) {
-//		String STT = msg.substring(String("relay-status-all|HUB|").length());
-//		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-//		STT_PUMP1 = (STT[STM32_RELAY::PUMP1] == '1' ? true : false);
-//		STT_PUMP2 = (STT[STM32_RELAY::PUMP2] == '1' ? true : false);
-//		STT_FAN = (STT[STM32_RELAY::FAN] == '1' ? true : false);
-//		STT_LIGHT = (STT[STM32_RELAY::LIGHT] == '1' ? true : false);
-//		STT_WATER_IN = (STT[STM32_RELAY::WATER_IN] == '1' ? true : false);
-//	}
-//	else if (msg.startsWith("relay-status|HUB|")) {
-//		String RL = msg.substring(String("relay-status|HUB|").length());
-//		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-//		int relay = RL.toInt();
-//		String STT = RL.substring(RL.indexOf('|') + 1);
-//		char stt = STT[0];
-//		switch (relay)
-//		{
-//		case PUMP1:
-//			STT_PUMP1 = stt;
-//		case PUMP2:
-//			STT_PUMP2 = stt;
-//		case FAN:
-//			STT_FAN = stt;
-//		case LIGHT:
-//			STT_LIGHT = stt;
-//		case WATER_IN:
-//			STT_WATER_IN = stt;
-//		default:
-//			break;
-//		}
-//
-//		
-//	}
-//}
+void control_stm32_message(String msg) {
+	msg.trim();
+	msg.toLowerCase();
+	if (msg.startsWith("relay-status-all|HUB|")) {
+		String STT = msg.substring(String("relay-status-all|HUB|").length());
+		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+		STT_PUMP1 = (STT[STM32_RELAY::PUMP1] == '1' ? true : false);
+		STT_PUMP2 = (STT[STM32_RELAY::PUMP2] == '1' ? true : false);
+		STT_FAN = (STT[STM32_RELAY::FAN] == '1' ? true : false);
+		STT_LIGHT = (STT[STM32_RELAY::LIGHT] == '1' ? true : false);
+		STT_WATER_IN = (STT[STM32_RELAY::WATER_IN] == '1' ? true : false);
+	}
+	else if (msg.startsWith("relay-status|HUB|")) {
+		String RL = msg.substring(String("relay-status|HUB|").length());
+		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
+		int relay = RL.toInt();
+		String STT = RL.substring(RL.indexOf('|') + 1);
+		char stt = STT[0];
+		switch (relay)
+		{
+		case PUMP1:
+			STT_PUMP1 = stt;
+		case PUMP2:
+			STT_PUMP2 = stt;
+		case FAN:
+			STT_FAN = stt;
+		case LIGHT:
+			STT_LIGHT = stt;
+		case WATER_IN:
+			STT_WATER_IN = stt;
+		default:
+			break;
+		}
+
+		
+	}
+}
 
 void serial_command_handle() {
 	if (Serial.available()) {
@@ -669,18 +476,18 @@ void serial_command_handle() {
 	delay(1);
 }
 
-//void stm32_command_handle() {
-//	if (STM32.available()) {
-//		String Scmd = Serial.readString();
-//		Scmd.trim();
-//		DEBUG.println(("\r\n>>>"));
-//		DEBUG.println(Scmd);
-//
-//		control_stm32_message(Scmd);
-//	}
-//
-//	delay(1);
-//}
+void stm32_command_handle() {
+	if (STM32.available()) {
+		String Scmd = Serial.readString();
+		Scmd.trim();
+		DEBUG.println(("\r\n>>>"));
+		DEBUG.println(Scmd);
+
+		control_stm32_message(Scmd);
+	}
+
+	delay(1);
+}
 
 #pragma endregion
 

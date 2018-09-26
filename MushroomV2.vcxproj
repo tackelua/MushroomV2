@@ -82,9 +82,6 @@
     <None Include="blynk.ino">
       <FileType>CppCode</FileType>
     </None>
-    <None Include="button.ino">
-      <FileType>CppCode</FileType>
-    </None>
     <None Include="functions.ino">
       <FileType>CppCode</FileType>
     </None>

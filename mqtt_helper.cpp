@@ -30,7 +30,7 @@ extern String timeStr;
 extern bool STT_PUMP1, STT_FAN, STT_LIGHT;
 extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
 extern void send_status_to_server();
-extern void hc595_digitalWrite(int pin, bool status);
+extern void stm32_digitalWrite(int pin, bool status);
 
 String mqtt_Message;
 
@@ -155,12 +155,12 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	DEBUG.println(("]"));
 
 	mqtt_Message = "";
-	hc595_digitalWrite(LED_STATUS, ON);
+	digitalWrite(LED_BUILTIN, ON);
 	for (uint i = 0; i < length; i++) {
 		//DEBUG.print((char)payload[i]);
 		mqtt_Message += (char)payload[i];
 	}
-	hc595_digitalWrite(LED_STATUS, OFF);
+	digitalWrite(LED_BUILTIN, OFF);
 
 	DEBUG.println(mqtt_Message);
 
@@ -300,9 +300,9 @@ bool mqtt_publish(String topic, String payload, bool retain) {
 	DEBUG.println(payload);
 	DEBUG.println();
 
-	hc595_digitalWrite(LED_STATUS, ON);
+	digitalWrite(LED_BUILTIN, ON);
 	bool ret = mqtt_client.publish(topic.c_str(), payload.c_str(), retain);
 	delay(1);
-	hc595_digitalWrite(LED_STATUS, OFF);
+	digitalWrite(LED_BUILTIN, OFF);
 	return ret;
 }

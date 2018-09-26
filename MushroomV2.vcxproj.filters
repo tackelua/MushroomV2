@@ -16,7 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="MushroomV2.ino" />
-    <None Include="button.ino" />
     <None Include="functions.ino" />
     <None Include="oled.ino" />
     <None Include="requirements_firmware_mushroom.docx">

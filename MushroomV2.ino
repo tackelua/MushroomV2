@@ -34,12 +34,8 @@
 
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
-//HardwareSerial STM32_Serial = Serial;
-//#define STM32 STM32_Serial
-
-//WiFiManager wifiManager;
-Button myBtn(PININ_BUTTON, true, true, 20);
-
+HardwareSerial STM32_Serial = Serial;
+#define STM32 STM32_Serial
 
 bool STT_PUMP1 = true;
 bool STT_PUMP2 = true;
@@ -92,90 +88,25 @@ bool flag_water_empty = false;
 
 void setup()
 {
-#ifdef USE_OLED
-	display.init();
-	display.clear();
-	display.flipScreenVertically();
-	display.setContrast(255);
-
-	qrcode.init();
-	qrcode.create("HID=" + HubID);
-#endif // USE_OLED
 	delay(50);
 	Serial.begin(74880);
 	Serial.setTimeout(20);
 
-	////====	
-	//display.clear();
-	//display.setTextAlignment(TEXT_ALIGN_LEFT);
-	//display.setFont(ArialMT_Plain_16);
-	//display.drawString(0, 10, "SmartConfig");
-	//display.display();
-
-	//Serial.println(("SmartConfig started."));
-	//WiFi.beginSmartConfig();
-	//while (1) {
-	//	delay(100);
-	//	Serial.print(("."));
-	//	if (WiFi.smartConfigDone()) {
-	//		WiFi.stopSmartConfig();
-	//		break;
-	//	}
-	//}
-
-	//display.clear();
-	//display.setTextAlignment(TEXT_ALIGN_LEFT);
-	//display.setFont(ArialMT_Plain_16);
-	//display.drawString(0, 10, "Success");
-	//display.display();
-
-	//Serial.println(("SmartConfig: Success"));
-	//WiFi.printDiag(Serial);
-
-	//wifi_init();
-	//display.clear();
-	//display.setTextAlignment(TEXT_ALIGN_LEFT);
-	//display.setFont(ArialMT_Plain_16);
-	//display.drawString(0, 10, WiFi.localIP().toString());
-	//display.display();
-	////====
-
-
-	//pinMode(LED_STATUS, OUTPUT);
-	//pinMode(PUMP1, OUTPUT);
-	//pinMode(FAN, OUTPUT);
-	//pinMode(LIGHT, OUTPUT);
-	pinMode(HC595_DATA, OUTPUT);
-	pinMode(HC595_SHCP, OUTPUT);
-	pinMode(HC595_STCP, OUTPUT); digitalWrite(HC595_STCP, HIGH);
-	pinMode(PININ_WATER_L, INPUT);
-
 	control(PUMP1, false, false, false);
 	control(FAN, false, false, false);
 	control(LIGHT, false, false, false);
-	control(LED_STATUS, false, false, false);
+	control(LED_BUILTIN, false, false, false);
 
 	Serial.println("HID=" + HubID);
 
-
-	Serial.println(("LED_STATUS ON"));
-
-	sensor_init();
+	Serial.println(("LED_BUILTIN ON"));
 
 	wifi_init();
 	Serial.print("RSSI: ");
 	Serial.println(WiFi.RSSI());
 
-	hc595_digitalWrite(LED_STATUS, OFF);
-	Serial.println(("LED_STATUS OFF"));
-
-#ifdef USE_OLED
-	display.clear();
-	display.setTextAlignment(TEXT_ALIGN_LEFT);
-	display.setFont(ArialMT_Plain_16);
-	display.drawString(0, 10, "Connected");
-	display.display();
-#endif // USE_OLED
+	digitalWrite(LED_BUILTIN, OFF);
+	Serial.println(("LED_BUILTIN OFF"));
 
 	//DEBUG.print(("IP: "));
 	//DEBUG.println(WiFi.localIP().toString());
@@ -193,12 +124,9 @@ void loop()
 {
 	/* add main program code here */
 	wifi_loop();
-	led_loop();
 	updateTimeStamp(3600000);
 	mqtt_loop();
 	serial_command_handle();
-	button_handle();
-	update_sensor(10000);
 	auto_control();
 	Blynk.run();
 }
