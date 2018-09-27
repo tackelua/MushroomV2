@@ -7,7 +7,6 @@ bool water_low;
 unsigned long t_pump1_change, t_pump2_change, t_fan_change, t_light_change;
 String CMD_ID = "         ";
 
-
 #pragma region functions
 bool ledStt = false;
 bool smart_config() {
@@ -327,10 +326,12 @@ void send_status_to_server() {
 
 void send_message_to_stm32(String cmd) {
 	delay(10);
+	digitalWrite(LED_BUILTIN, ON);
 	DEBUG.println("\r\nSTM32<<<");
 	STM32.println(cmd);
 	delay(50);
 	//DEBUG.println();
+	digitalWrite(LED_BUILTIN, OFF);
 }
 
 void send_time_to_stm32() {
@@ -586,11 +587,13 @@ void control_stm32_message(String msg) {
 
 void stm32_command_handle() {
 	if (STM32.available()) {
-		String Scmd = DEBUG.readString();
+		digitalWrite(LED_BUILTIN, ON);
+		String Scmd = STM32.readString();
 		Scmd.trim();
 		DEBUG.println(("\r\nSTM32>>>"));
 		DEBUG.println(Scmd);
 		//DEBUG.println();
+		digitalWrite(LED_BUILTIN, OFF);
 
 		control_stm32_message(Scmd);
 		control_handle(Scmd);

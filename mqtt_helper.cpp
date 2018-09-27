@@ -135,6 +135,7 @@ int wifi_quality() {
 }
 
 void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
+	digitalWrite(LED_BUILTIN, ON);
 	//ulong t = millis();
 	//DEBUG.print(("\r\n#1 FREE RAM : "));
 	//DEBUG.println(ESP.getFreeHeap());
@@ -150,14 +151,14 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	DEBUG.println(("]"));
 
 	mqtt_Message = "";
-	digitalWrite(LED_BUILTIN, ON);
 	for (uint i = 0; i < length; i++) {
 		//DEBUG.print((char)payload[i]);
 		mqtt_Message += (char)payload[i];
 	}
-	digitalWrite(LED_BUILTIN, OFF);
 
 	DEBUG.println(mqtt_Message);
+
+	digitalWrite(LED_BUILTIN, OFF);
 
 	//control pump1, light, fan
 	if (topicStr == String("Mushroom/Commands/" + HubID))
@@ -275,6 +276,7 @@ void mqtt_reconnect() {  // Loop until we're reconnected
 			mqtt_client.publish(("Mushroom/SetWifi/" + HubID).c_str(), "Success");
 			mqtt_client.subscribe(("Mushroom/Library/" + HubID).c_str());
 			mqtt_client.subscribe(("Mushroom/Commands/" + HubID).c_str());
+			mqtt_client.subscribe(("Mushroom/Terminal/" + HubID).c_str());
 			mqtt_client.subscribe("Mushroom/Terminal");
 		}
 		else {
@@ -309,12 +311,12 @@ bool mqtt_publish(String topic, String payload, bool retain) {
 	if (!mqtt_client.connected()) {
 		return false;
 	}
+	digitalWrite(LED_BUILTIN, ON);
 	DEBUG.print(("MQTT<<<  "));
 	DEBUG.println(topic);
 	DEBUG.println(payload);
 	DEBUG.println();
 
-	digitalWrite(LED_BUILTIN, ON);
 	bool ret = mqtt_client.publish(topic.c_str(), payload.c_str(), retain);
 	yield();
 	digitalWrite(LED_BUILTIN, OFF);

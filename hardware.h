@@ -7,10 +7,11 @@
 #include "WProgram.h"
 #endif
 
+#define STM32 Serial
+#define DEBUG Serial1
+
 //#include "mqtt_helper.h"
 extern String HubID;
-
-#define DEBUG Serial
 
 enum STM32_RELAY {
 	PUMP1 = 1,
@@ -20,8 +21,8 @@ enum STM32_RELAY {
 	WATER_IN
 };
 
-#define ON	HIGH 
-#define OFF	LOW
+#define ON	LOW 
+#define OFF	HIGH
 
 #endif
 

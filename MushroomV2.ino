@@ -18,9 +18,6 @@
 #define __VERSION__	"3.0.1"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
-//HardwareSerial STM32_Serial = Serial;
-#define STM32 Serial
-#define DEBUG Serial1
 
 bool STT_PUMP1 = true;
 bool STT_PUMP2 = true;
@@ -48,12 +45,10 @@ String HubID = getID();
 
 void setup()
 {
-	delay(5000);
 	STM32.begin(74880);
 	STM32.setTimeout(20);
 	DEBUG.begin(74880);
 	DEBUG.setTimeout(20);
-	DEBUG.setDebugOutput(true);
 
 	wifi_init();
 	pinMode(LED_BUILTIN, OUTPUT);
