@@ -15,16 +15,14 @@
 #include "mqtt_helper.h"
 
 
-#define __VERSION__	"3.0.1"
+#define __VERSION__	"3.0.2"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
-bool STT_PUMP1 = true;
-bool STT_PUMP2 = true;
-bool STT_WATER_IN = true;
-bool STT_FAN = true;
-bool STT_LIGHT = true;
-bool STT_LED_STATUS = true;
+bool STT_PUMP1 = false;
+bool STT_PUMP2 = false;
+bool STT_FAN = false;
+bool STT_LIGHT = false;
 
 bool flag_SmartConfig = false;
 

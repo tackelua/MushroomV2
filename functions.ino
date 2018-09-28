@@ -184,40 +184,45 @@ void updateTimeStamp(unsigned long interval = 0) {
 	yield();
 }
 
-void update_sensor(unsigned long period) {
-	StaticJsonBuffer<200> jsBuffer;
-	JsonObject& jsData = jsBuffer.createObject();
-	jsData["HUB_ID"] = HubID;
-	jsData["TEMP"] = (abs(temp) > 200.0 ? -1 : (int)temp);
-	jsData["HUMI"] = (abs(humi) > 200.0 ? -1 : (int)humi);
-	jsData["LIGHT"] = light == 1024 ? -1 : light;
+void update_sensor(unsigned long interval) {
+	static unsigned long t = -1;
+	if (interval == 0 || millis() - t >= interval) {
+		t = millis();
 
-	bool waterEmpty = water_low;
-	jsData["WATER_EMPTY"] = waterEmpty ? "YES" : "NO";
+		StaticJsonBuffer<200> jsBuffer;
+		JsonObject& jsData = jsBuffer.createObject();
+		jsData["HUB_ID"] = HubID;
+		jsData["TEMP"] = (abs(temp) > 200.0 ? -1 : (int)temp);
+		jsData["HUMI"] = (abs(humi) > 200.0 ? -1 : (int)humi);
+		jsData["LIGHT"] = light == 1024 ? -1 : light;
 
-	int dBm = WiFi.RSSI();
-	int quality;
-	if (dBm <= -100)
-		quality = 0;
-	else if (dBm >= -50)
-		quality = 100;
-	else
-		quality = 2 * (dBm + 100);
-	jsData["RSSI"] = quality;
+		bool waterEmpty = water_low;
+		jsData["WATER_EMPTY"] = waterEmpty ? "YES" : "NO";
 
-	String data;
-	data.reserve(120);
-	jsData.printTo(data);
-	mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
+		int dBm = WiFi.RSSI();
+		int quality;
+		if (dBm <= -100)
+			quality = 0;
+		else if (dBm >= -50)
+			quality = 100;
+		else
+			quality = 2 * (dBm + 100);
+		jsData["RSSI"] = quality;
 
-	Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
-	Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
-	Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
+		String data;
+		data.reserve(120);
+		jsData.printTo(data);
+		mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
+
+		Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
+		Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
+		Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
+	}
 }
 
 String make_status_string_to_stm32() {
 	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT) + String(STT_WATER_IN);
+	String s = String(STT_PUMP1) + String(STT_PUMP2) + String(STT_FAN) + String(STT_LIGHT);
 	return s;
 }
 void stm32_digitalWrite(int pin, bool status) {
@@ -444,8 +449,9 @@ void updateFirmware(String url) {
 	}
 }
 
-void control_handle(String cmd) {
-	if (cmd.startsWith("/")) {
+void control_handle(String _cmd) {
+	if (_cmd.startsWith("/")) {
+		String cmd = _cmd;
 		cmd.toUpperCase();
 		if (cmd.indexOf("LIGHT ON") > -1) {
 			skip_auto_light = true;
@@ -480,20 +486,18 @@ void control_handle(String cmd) {
 	}
 }
 
-String stm32_msg_get_params(String msg, String params) {
+float stm32_msg_get_params(String msg, String params) {
 	//res:sensor-all|ABC123|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
 	msg.trim();
-	int idx = msg.indexOf(params);
+	int idx = msg.indexOf(params + "=");
 	String data;
 	if (idx > 0) {
 		data = msg.substring(idx + params.length() + 1); //+1 cho dấu bằng
-		data = data.substring(0, data.indexOf('|'));
 	}
-	return data;
+	return data.toFloat();
 }
 void control_stm32_message(String msg) {
 	msg.trim();
-	msg.toLowerCase();
 	if (msg.startsWith("res:relay-status-all|HUB|")) {
 		String STT = msg.substring(String("res:relay-status-all|HUB|").length());
 		//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
@@ -508,9 +512,6 @@ void control_stm32_message(String msg) {
 
 		if (STT[STM32_RELAY::LIGHT] == '1') STT_LIGHT = true;
 		else if (STT[STM32_RELAY::LIGHT] == '0') STT_LIGHT = false;
-
-		if (STT[STM32_RELAY::WATER_IN] == '1') STT_WATER_IN = true;
-		else if (STT[STM32_RELAY::WATER_IN] == '0') STT_WATER_IN = false;
 	}
 	else if (msg.startsWith("res:relay-status|HUB|")) {
 		String RL = msg.substring(String("res:relay-status|HUB|").length());
@@ -532,39 +533,38 @@ void control_stm32_message(String msg) {
 		case LIGHT:
 			STT_LIGHT = stt;
 			break;
-		case WATER_IN:
-			STT_WATER_IN = stt;
-			break;
 		default:
 			break;
 		}
 	}
 	else if (msg.startsWith("res:sensor-all|HUB|")) {
 		//res:sensor-all|HUB|t0=30.02|h0=80.89|l0=6244|w1=0|w0=1\r\n
-		float t0 = stm32_msg_get_params(msg, "t0").toFloat();
+		float t0 = stm32_msg_get_params(msg, "t0");
 		if (t0 != 0) {
 			temp = t0;
 		}
 
-		float h0 = stm32_msg_get_params(msg, "h0").toFloat();
+		float h0 = stm32_msg_get_params(msg, "h0");
 		if (h0 != 0) {
 			humi = h0;
 		}
 
-		int l0 = stm32_msg_get_params(msg, "l0").toInt();
+		int l0 = stm32_msg_get_params(msg, "l0");
 		if (l0 != 0) {
 			light = l0;
 		}
 
-		bool w0 = stm32_msg_get_params(msg, "w0").toInt();
+		bool w0 = int(stm32_msg_get_params(msg, "w0"));
 		if (w0 != 0) {
 			water_low = w0;
 		}
 
-		bool w1 = stm32_msg_get_params(msg, "w1").toInt();
+		bool w1 = int(stm32_msg_get_params(msg, "w1"));
 		if (w1 != 0) {
 			water_high = w1;
 		}
+
+		update_sensor(0);
 	}
 	else if (msg.startsWith("cmd:get-time")) {
 		//cmd:get-time\r\n
@@ -590,8 +590,8 @@ void stm32_command_handle() {
 		digitalWrite(LED_BUILTIN, ON);
 		String Scmd = STM32.readString();
 		Scmd.trim();
-		DEBUG.println(("\r\nSTM32>>>"));
-		DEBUG.println(Scmd);
+		STM32.println(("\r\nSTM32>>>"));
+		STM32.println(Scmd);
 		//DEBUG.println();
 		digitalWrite(LED_BUILTIN, OFF);
 
