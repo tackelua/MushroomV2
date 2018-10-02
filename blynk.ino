@@ -1,5 +1,5 @@
 #define BL_LIGHT  V1
-#define BL_PUMP1  V2
+#define BL_PUMP_MIX  V2
 #define BL_FAN	  V3
 #define BL_TEMP	  V4
 #define BL_HUMI	  V5
@@ -15,10 +15,10 @@ BLYNK_WRITE(BL_LIGHT) {
 	DEBUG.printf("BLYNK LIGHT %d\r\n", status);
 	control(LIGHT, (bool)status, true, true);
 }
-BLYNK_WRITE(BL_PUMP1) {
+BLYNK_WRITE(BL_PUMP_MIX) {
 	int status = param.asInt();
 	DEBUG.printf("BLYNK PUMP %d\r\n", status);
-	control(PUMP1, (bool)status, true, true);
+	control(PUMP_MIX, (bool)status, true, true);
 }
 BLYNK_WRITE(BL_FAN) {
 	int status = param.asInt();

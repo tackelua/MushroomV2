@@ -6,19 +6,20 @@
 #else
 #include "WProgram.h"
 #endif
+#include "SoftwareSerial.h"
 
 #define STM32 Serial
-#define DEBUG Serial1
+extern SoftwareSerial DEBUG;
+
 
 //#include "mqtt_helper.h"
 extern String HubID;
 
 enum STM32_RELAY {
-	PUMP1 = 1,
-	PUMP2,
-	FAN,
-	LIGHT,
-	WATER_IN
+	LIGHT = 1,
+	PUMP_MIX,
+	PUMP_FLOOR,
+	FAN
 };
 
 #define ON	LOW 

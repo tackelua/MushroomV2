@@ -1,4 +1,8 @@
-﻿#include <DNSServer.h>
+﻿#define CUSTOM_INIT_PINS
+#define D3_OUTPUT_HIGH
+
+#include <SoftwareSerial.h>
+#include <DNSServer.h>
 #include <ESP8266WebServerSecure.h>
 #include <ESP8266WebServer.h>
 #include <TimeLib.h>
@@ -19,10 +23,12 @@
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
-bool STT_PUMP1 = false;
-bool STT_PUMP2 = false;
+bool STT_PUMP_MIX = false;
+bool STT_PUMP_FLOOR = false;
 bool STT_FAN = false;
 bool STT_LIGHT = false;
+
+bool flag_schedule_pump_floor = false;
 
 bool flag_SmartConfig = false;
 
@@ -43,6 +49,9 @@ String HubID = getID();
 
 void setup()
 {
+	pinMode(D3, OUTPUT);
+	digitalWrite(D3, HIGH);
+
 	STM32.begin(74880);
 	STM32.setTimeout(20);
 	DEBUG.begin(74880);

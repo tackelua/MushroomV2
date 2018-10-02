@@ -59,6 +59,7 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/debug.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/pins_arduino.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\variants\d1_mini/../generic/common.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\SoftwareSerial/SoftwareSerial.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\DNSServer\src/DNSServer.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\libraries\ESP8266WiFi\src/WiFiUdp.h \
  C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/Udp.h \

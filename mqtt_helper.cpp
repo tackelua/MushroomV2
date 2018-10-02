@@ -13,6 +13,7 @@ extern String HubID;
 extern String _firmwareVersion;
 extern void updateFirmware(String url);
 extern String CMD_ID;
+extern bool flag_schedule_pump_floor;
 
 
 const char* mqtt_server = "mic.duytan.edu.vn";
@@ -24,13 +25,16 @@ const String on_ = "on";
 const String off_ = "off";
 
 int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
+long DATE_HAVERST_PHASE;
 bool library = false;
 
 extern String timeStr;
-extern bool STT_PUMP1, STT_FAN, STT_LIGHT;
+extern bool STT_PUMP_MIX, STT_FAN, STT_LIGHT;
 extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
-extern void send_status_to_server();
 extern void stm32_digitalWrite(int pin, bool status);
+extern String make_status_string_to_stm32();
+extern void send_message_to_stm32(String cmd);
+extern void send_status_to_server();
 
 String mqtt_Message;
 
@@ -38,7 +42,7 @@ WiFiClient mqtt_espClient;
 PubSubClient mqtt_client(mqtt_espClient);
 
 #pragma region parseTopic
-void handleTopic__Mushroom_Commands_HubID() {
+void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	StaticJsonBuffer<200> jsonBuffer;
 	JsonObject& commands = jsonBuffer.parseObject(mqtt_Message);
 
@@ -59,19 +63,19 @@ void handleTopic__Mushroom_Commands_HubID() {
 		isCommandFromApp = true;
 	}
 
-	String pump1_stt = commands["MIST"].as<String>();
-	extern bool skip_auto_pump1;
-	if (pump1_stt == on_)
+	String pump_mix_stt = commands["MIST"].as<String>();
+	extern bool skip_auto_pump_mix;
+	if (pump_mix_stt == on_)
 	{
-		skip_auto_pump1 = true;
-		control(PUMP1, true, false, isCommandFromApp);
-		control(PUMP2, true, false, isCommandFromApp);
+		skip_auto_pump_mix = true;
+		control(PUMP_MIX, true, false, isCommandFromApp);
+		control(PUMP_FLOOR, true, false, isCommandFromApp);
 	}
-	else if (pump1_stt == off_)
+	else if (pump_mix_stt == off_)
 	{
-		skip_auto_pump1 = true;
-		control(PUMP1, false, false, isCommandFromApp);
-		control(PUMP2, false, false, isCommandFromApp);
+		skip_auto_pump_mix = true;
+		control(PUMP_MIX, false, false, isCommandFromApp);
+		control(PUMP_FLOOR, false, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
@@ -100,12 +104,10 @@ void handleTopic__Mushroom_Commands_HubID() {
 		control(FAN, false, false, isCommandFromApp);
 	}
 
-	if (isCommandFromApp) {
-		send_status_to_server();
-	}
+	send_message_to_stm32("cmd:set-relay-status-all|HUB|" + make_status_string_to_stm32());
 }
 
-void handleTopic__Mushroom_Library_HubID() {
+void handleTopic__Mushroom_Library_HubID(String mqtt_Message) {
 	StaticJsonBuffer<200> jsonBuffer;
 	JsonObject& lib = jsonBuffer.parseObject(mqtt_Message);
 	TEMP_MAX = lib["TEMP_MAX"].as<int>();
@@ -114,6 +116,7 @@ void handleTopic__Mushroom_Library_HubID() {
 	HUMI_MIN = lib["HUMI_MIN"].as<int>();
 	LIGHT_MAX = lib["LIGHT_MAX"].as<int>();
 	LIGHT_MIN = lib["LIGHT_MIN"].as<int>();
+	DATE_HAVERST_PHASE = lib["DATE_HAVERST_PHASE"].as<long>();
 	library = true;
 	DEBUG.println("TEMP_MAX = " + String(TEMP_MAX));
 	DEBUG.println("TEMP_MIN = " + String(TEMP_MIN));
@@ -121,6 +124,7 @@ void handleTopic__Mushroom_Library_HubID() {
 	DEBUG.println("HUMI_MIN = " + String(HUMI_MIN));
 	DEBUG.println("LIGHT_MAX = " + String(LIGHT_MAX));
 	DEBUG.println("LIGHT_MIN = " + String(LIGHT_MIN));
+	DEBUG.println("DATE_HAVERST_PHASE = " + String(DATE_HAVERST_PHASE));
 }
 #pragma endregion
 
@@ -160,14 +164,14 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 
 	digitalWrite(LED_BUILTIN, OFF);
 
-	//control pump1, light, fan
+	//control pump_mix, light, fan
 	if (topicStr == String("Mushroom/Commands/" + HubID))
 	{
-		handleTopic__Mushroom_Commands_HubID();
+		handleTopic__Mushroom_Commands_HubID(mqtt_Message);
 	}
 
 	else if (topicStr == String("Mushroom/Library/" + HubID)) {
-		handleTopic__Mushroom_Library_HubID();
+		handleTopic__Mushroom_Library_HubID(mqtt_Message);
 	}
 
 	else if (topicStr == "Mushroom/Terminal") {
