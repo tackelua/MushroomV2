@@ -204,4 +204,5 @@ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\Mu
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetGPS.h \
  C:\Users\tacke\Documents\Arduino\libraries\Blynk\src/WidgetMap.h \
  C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\hardware.h \
- C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h
+ C:\Users\tacke\AppData\Local\Temp\VMBuilds\MushroomV2\esp8266_d1_mini\Release\mqtt_helper.h \
+ C:\Users\tacke\AppData\Local\arduino15\packages\esp8266\hardware\esp8266\2.4.1\cores\esp8266/FS.h

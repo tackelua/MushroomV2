@@ -13,15 +13,15 @@ void blynk_init() {
 BLYNK_WRITE(BL_LIGHT) {
 	int status = param.asInt();
 	DEBUG.printf("BLYNK LIGHT %d\r\n", status);
-	control(LIGHT, (bool)status, true, true);
+	control(LIGHT, (bool)status, true);
 }
 BLYNK_WRITE(BL_PUMP_MIX) {
 	int status = param.asInt();
 	DEBUG.printf("BLYNK PUMP %d\r\n", status);
-	control(PUMP_MIX, (bool)status, true, true);
+	control(PUMP_MIX, (bool)status, true);
 }
 BLYNK_WRITE(BL_FAN) {
 	int status = param.asInt();
 	DEBUG.printf("BLYNK FAN %d\r\n", status);
-	control(FAN, (bool)status, true, true);
+	control(FAN, (bool)status, true);
 }

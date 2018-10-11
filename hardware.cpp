@@ -1,3 +1,3 @@
 #include "hardware.h"
 
-SoftwareSerial DEBUG(D1, D2);
+//SoftwareSerial DEBUG(D1, D2);

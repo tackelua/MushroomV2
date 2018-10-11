@@ -5,6 +5,7 @@ bool water_high;
 bool water_low;
 
 unsigned long t_pump_mix_change, t_pump_floor_change, t_fan_change, t_light_change;
+bool pin_change = false;
 String CMD_ID = "         ";
 
 void send_message_to_stm32(String cmd);
@@ -55,7 +56,7 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
-	WiFi.begin("MIC", "");
+	WiFi.begin("DTU", "");
 	DEBUG.println();
 	WiFi.printDiag(Serial);
 	DEBUG.println();
@@ -85,6 +86,23 @@ void wifi_loop() {
 		}
 
 	}
+}
+
+void libraries_init() {
+	SPIFFS.begin();
+	File libConfigs;
+	libConfigs = SPIFFS.open(file_libConfigs, "w");
+	if (libConfigs) {
+		String lib;
+		while (libConfigs.available()) {
+			lib += libConfigs.read();
+		}
+		handleTopic__Mushroom_Library_HubID(lib);
+	}
+	else {
+		DEBUG.println("\r\nLibraries not available");
+	}
+	libConfigs.close();
 }
 
 extern PubSubClient mqtt_client;
@@ -251,52 +269,39 @@ bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 	return res;
 }
 
-bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
-bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp) { //status = true -> ON; false -> OFF
-	bool pin_change = false;
-
-	//stm32_digitalWrite(pin, status ? ON : OFF);
-
+void control(int pin, bool status, bool isCommandFromApp) { //status = true -> ON; false -> OFF
+	
 	if ((pin == PUMP_FLOOR) && (STT_PUMP_FLOOR != status)) {
 		t_pump_floor_change = millis();
 		STT_PUMP_FLOOR = status;
+		pin_change = true;
 		DEBUG.print(("PUMP_FLOOR: "));
 		DEBUG.println(status ? "ON" : "OFF");
-		create_logs("Pump2", status, isCommandFromApp);
 	}
 	if ((pin == PUMP_MIX) && (STT_PUMP_MIX != status)) {
 		t_pump_mix_change = millis();
 		STT_PUMP_MIX = status;
-		//pin_change = true;
+		pin_change = true;
 		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
-		create_logs("Mist", status, isCommandFromApp);
 	}
 	if ((pin == FAN) && (STT_FAN != status)) {
 		t_fan_change = millis();
 		STT_FAN = status;
-		//pin_change = true;
+		pin_change = true;
 		DEBUG.print(("FAN: "));
 		DEBUG.println(status ? "ON" : "OFF");
-		create_logs("Fan", status, isCommandFromApp);
 	}
 	if ((pin == LIGHT) && (STT_LIGHT != status)) {
 		t_light_change = millis();
 		STT_LIGHT = status;
-		//pin_change = true;
+		pin_change = true;
 		DEBUG.print(("LIGHT: "));
 		DEBUG.println(status ? "ON" : "OFF");
-		create_logs("Light", status, isCommandFromApp);
 	}
 
+	flag_isCommandFromApp = isCommandFromApp;
 
-	//if (pin_change) {
-	//	stm32_digitalWrite(pin, status ? ON : OFF);
-	//	if (update_to_server) {
-	//		send_status_to_server();
-	//	}
-	//}
-	//return pin_change;
 }
 
 void send_status_to_server() {
@@ -342,6 +347,11 @@ void stm32_digitalWrite(int pin, bool status) {
 	String s = status ? "0" : "1";
 	String c = "cmd:set-relay-status|HUB|" + String(pin) + "|" + s;
 	send_message_to_stm32(c);
+}
+
+void send_control_message_all_to_stm32() {
+	send_message_to_stm32("cmd:set-relay-status-all|HUB|" + make_status_string_to_stm32());
+	pin_change = false;
 }
 
 void send_time_to_stm32() {
@@ -448,7 +458,7 @@ void auto_control() {
 		skip_auto_light = false;
 		if (STT_LIGHT) {
 			DEBUG.println("AUTO LIGHT OFF");
-			control(LIGHT, false, true, false);
+			control(LIGHT, false, false);
 		}
 	}
 
@@ -458,7 +468,7 @@ void auto_control() {
 		skip_auto_pump_mix = false;
 		if (STT_PUMP_MIX) {
 			DEBUG.println("AUTO PUMP_MIX OFF");
-			control(PUMP_MIX, false, true, false);
+			control(PUMP_MIX, false, false);
 
 			if (flag_schedule_pump_floor) {
 				pump_floor_on = true;
@@ -467,14 +477,14 @@ void auto_control() {
 	}
 	if (pump_floor_on) {
 		DEBUG.println("AUTO PUMP_FLOOR OFF");
-		control(PUMP_FLOOR, true, false, false);
-		create_logs("Pump_Floor", true, false);
+		control(PUMP_FLOOR, true, false);
+		create_logs("Pump_Floor", false, false);
 	}
 	//+ PUMP_FLOOR tự tắt sau 90s
 	if ((millis() - t_pump_floor_change) > 90000) {
 		if (STT_PUMP_FLOOR) {
 			DEBUG.println("AUTO PUMP_FLOOR OFF");
-			control(PUMP_FLOOR, false, true, false);
+			control(PUMP_FLOOR, false, false);
 		}
 	}
 	//+ FAN tự tắt sau 185s
@@ -482,7 +492,7 @@ void auto_control() {
 		skip_auto_fan = false;
 		if (STT_FAN) {
 			DEBUG.println("AUTO FAN OFF");
-			control(FAN, false, true, false);
+			control(FAN, false, false);
 		}
 	}
 
@@ -496,11 +506,11 @@ void auto_control() {
 	if (!skip_auto_light) {
 		if (library && (!STT_LIGHT) && (light != -1 && light < LIGHT_MIN) && (hour() >= 6) && (hour() <= 18)) {
 			DEBUG.println("AUTO LIGHT ON");
-			control(LIGHT, true, true, false);
+			control(LIGHT, true, false);
 		}
 		else if (library && (light != -1 && light > LIGHT_MAX) && STT_LIGHT) {
 			DEBUG.println("AUTO LIGHT OFF");
-			control(LIGHT, false, true, false);
+			control(LIGHT, false, false);
 		}
 	}
 	//-------------------
@@ -511,9 +521,9 @@ void auto_control() {
 		skip_auto_pump_mix = true;
 		skip_auto_fan = true;
 		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+		control(FAN, true, false);
 		DEBUG.println("AUTO PUMP_MIX ON");
-		control(PUMP_MIX, true, true, false);
+		control(PUMP_MIX, true, false);
 
 
 		//DEBUG.println("AUTO PUMP_FLOOR ON");
@@ -526,17 +536,17 @@ void auto_control() {
 	if (!skip_auto_pump_mix && library && ((temp != -1 && temp > TEMP_MAX) && (humi != -1 && humi < HUMI_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN)) && !STT_PUMP_MIX) {
 		if (now() > DATE_HAVERST_PHASE) {
 			DEBUG.println("AUTO PUMP_MIX ON");
-			control(PUMP_MIX, true, true, false);
+			control(PUMP_MIX, true, false);
 			DEBUG.println("AUTO FAN ON");
-			control(FAN, true, true, false);
+			control(FAN, true, false);
 
 			flag_schedule_pump_floor = true;
 		}
 		else {
 			DEBUG.println("AUTO PUMP_FLOOR ON");
-			control(PUMP_FLOOR, true, true, false);
+			control(PUMP_FLOOR, true, false);
 			DEBUG.println("AUTO FAN ON");
-			control(FAN, true, true, false);
+			control(FAN, true, false);
 		}
 	}
 	//-------------------
@@ -545,18 +555,21 @@ void auto_control() {
 	//Bật quạt FAN mỗi 15 phút
 	if (!skip_auto_fan && ((millis() - t_fan_change) > (15 * 1000 * SECS_PER_MIN)) && !STT_FAN) {
 		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+		control(FAN, true, false);
 	}
 
 	//TESTCASE 4, mỗi lần check cách nhau 30 phút
 	if (library && ((humi != -1 && humi < HUMI_MIN) && (temp != -1 && temp < TEMP_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN))) {
 		DEBUG.println("AUTO PUMP_MIX ON");
-		control(PUMP_MIX, true, true, false);
+		control(PUMP_MIX, true, false);
 
 		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+		control(FAN, true, false);
 	}
 
+	if (pin_change) {
+		send_control_message_all_to_stm32();
+	}
 	delay(1);
 }
 
@@ -588,29 +601,29 @@ void control_handle(String _cmd) {
 		cmd.toUpperCase();
 		if (cmd.indexOf("LIGHT ON") > -1) {
 			skip_auto_light = true;
-			control(LIGHT, true, true, true);
+			control(LIGHT, true, true);
 		}
 		if (cmd.indexOf("LIGHT OFF") > -1) {
 			skip_auto_light = true;
-			control(LIGHT, false, true, true);
+			control(LIGHT, false, true);
 		}
 
 		if (cmd.indexOf("MIST ON") > -1) {
 			skip_auto_pump_mix = true;
-			control(PUMP_MIX, true, true, true);
+			control(PUMP_MIX, true, true);
 		}
 		if (cmd.indexOf("MIST OFF") > -1) {
 			skip_auto_pump_mix = true;
-			control(PUMP_MIX, false, true, true);
+			control(PUMP_MIX, false, true);
 		}
 
 		if (cmd.indexOf("FAN ON") > -1) {
 			skip_auto_fan = true;
-			control(FAN, true, true, true);
+			control(FAN, true, true);
 		}
 		if (cmd.indexOf("FAN OFF") > -1) {
 			skip_auto_fan = true;
-			control(FAN, false, true, true);
+			control(FAN, false, true);
 		}
 		if (cmd.indexOf("RESET WIFI") > -1) {
 			DEBUG.println(("Reset Wifi"));
@@ -630,6 +643,10 @@ float stm32_msg_get_params(String msg, String params) {
 	return data.toFloat();
 }
 void control_stm32_message(String msg) {
+	static bool STM32_PRE_STT_PUMP_MIX = false;
+	static bool STM32_PRE_STT_PUMP_FLOOR = false;
+	static bool STM32_PRE_STT_FAN = false;
+	static bool STM32_PRE_STT_LIGHT = false;
 	msg.trim();
 	if (msg.startsWith("res:relay-status-all|HUB|")) {
 		String STT = msg.substring(String("res:relay-status-all|HUB|").length() - 1); //tính thứ tự relay từ 1
@@ -722,6 +739,15 @@ void control_stm32_message(String msg) {
 		//cmd:get-time\r\n
 		send_time_to_stm32();
 	}
+
+	if (STM32_PRE_STT_PUMP_MIX != STT_PUMP_MIX) {
+		create_logs("Mist", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+
+	STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;
+	STM32_PRE_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
+	STM32_PRE_STT_FAN = STT_FAN;
+	STM32_PRE_STT_LIGHT = STT_LIGHT;
 }
 
 //void serial_command_handle() {

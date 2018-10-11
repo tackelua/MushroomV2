@@ -17,9 +17,10 @@
 #include <BlynkSimpleEsp8266.h>
 #include "hardware.h"
 #include "mqtt_helper.h"
+#include <FS.h>
 
 
-#define __VERSION__	"3.0.2"
+#define __VERSION__	"3.0.2c"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
@@ -29,11 +30,12 @@ bool STT_FAN = false;
 bool STT_LIGHT = false;
 
 bool flag_schedule_pump_floor = false;
+bool flag_isCommandFromApp;
 
 bool flag_SmartConfig = false;
 
 void updateTimeStamp(unsigned long interval);
-bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
+void control(int pin, bool status, bool isCommandFromApp);
 String getID() {
 	byte mac[6];
 	WiFi.macAddress(mac);
@@ -57,12 +59,13 @@ void setup()
 	DEBUG.begin(74880);
 	DEBUG.setTimeout(20);
 
+	DEBUG.print(("Firmware Version: "));
+	DEBUG.println(_firmwareVersion);
+
+	//libraries_init();
 	wifi_init();
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, OFF);
-
-	DEBUG.print(("Firmware Version: "));
-	DEBUG.println(_firmwareVersion);
 
 	updateTimeStamp(0);
 	mqtt_init();

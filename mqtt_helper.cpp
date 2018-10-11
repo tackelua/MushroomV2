@@ -8,6 +8,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "hardware.h"
+#include <FS.h>
 
 extern String HubID;
 extern String _firmwareVersion;
@@ -15,7 +16,11 @@ extern void updateFirmware(String url);
 extern String CMD_ID;
 extern bool flag_schedule_pump_floor;
 
+extern bool skip_auto_pump_mix;
+extern bool skip_auto_light;
+extern bool skip_auto_fan; 
 
+const char* file_libConfigs = "configs.cfg";
 const char* mqtt_server = "mic.duytan.edu.vn";
 const char* mqtt_user = "Mic@DTU2017";
 const char* mqtt_password = "Mic@DTU2017!@#";
@@ -30,7 +35,8 @@ bool library = false;
 
 extern String timeStr;
 extern bool STT_PUMP_MIX, STT_FAN, STT_LIGHT;
-extern bool control(int pin, bool status, bool update_to_server, bool isCommandFromApp);
+extern bool pin_change;
+extern void control(int pin, bool status, bool isCommandFromApp);
 extern void stm32_digitalWrite(int pin, bool status);
 extern String make_status_string_to_stm32();
 extern void send_message_to_stm32(String cmd);
@@ -40,6 +46,8 @@ String mqtt_Message;
 
 WiFiClient mqtt_espClient;
 PubSubClient mqtt_client(mqtt_espClient);
+
+void send_control_message_all_to_stm32();
 
 #pragma region parseTopic
 void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
@@ -64,52 +72,68 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	}
 
 	String pump_mix_stt = commands["MIST"].as<String>();
-	extern bool skip_auto_pump_mix;
 	if (pump_mix_stt == on_)
 	{
 		skip_auto_pump_mix = true;
-		control(PUMP_MIX, true, false, isCommandFromApp);
-		control(PUMP_FLOOR, true, false, isCommandFromApp);
+		control(PUMP_MIX, true, isCommandFromApp);
+		control(PUMP_FLOOR, true, isCommandFromApp);
 	}
 	else if (pump_mix_stt == off_)
 	{
 		skip_auto_pump_mix = true;
-		control(PUMP_MIX, false, false, isCommandFromApp);
-		control(PUMP_FLOOR, false, false, isCommandFromApp);
+		control(PUMP_MIX, false, isCommandFromApp);
+		control(PUMP_FLOOR, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
-	extern bool skip_auto_light;
 	if (light_stt == on_)
 	{
 		skip_auto_light = true;
-		control(LIGHT, true, false, isCommandFromApp);
+		control(LIGHT, true, isCommandFromApp);
 	}
 	else if (light_stt == off_)
 	{
 		skip_auto_light = true;
-		control(LIGHT, false, false, isCommandFromApp);
+		control(LIGHT, false, isCommandFromApp);
 	}
 
 	String fan_stt = commands["FAN"].as<String>();
-	extern bool skip_auto_fan;
 	if (fan_stt == on_)
 	{
 		skip_auto_fan = true;
-		control(FAN, true, false, isCommandFromApp);
+		control(FAN, true, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
 		skip_auto_fan = true;
-		control(FAN, false, false, isCommandFromApp);
+		control(FAN, false, isCommandFromApp);
 	}
 
-	send_message_to_stm32("cmd:set-relay-status-all|HUB|" + make_status_string_to_stm32());
+	if (pin_change) {
+		send_control_message_all_to_stm32();
+	}
 }
 
 void handleTopic__Mushroom_Library_HubID(String mqtt_Message) {
 	StaticJsonBuffer<200> jsonBuffer;
 	JsonObject& lib = jsonBuffer.parseObject(mqtt_Message);
+	if (!lib.success())
+	{
+		DEBUG.println(F("\r\nParse Libs failed"));
+		DEBUG.println(mqtt_Message);
+		return;
+	}
+	File libConfigs;
+	libConfigs = SPIFFS.open(file_libConfigs, "w");
+	if (libConfigs) {
+		DEBUG.println(mqtt_Message);
+		libConfigs.print(mqtt_Message);
+		//libConfigs.flush();
+		delay(1000);
+		DEBUG.println(F("Saved libraries"));
+		libConfigs.close();
+	}
+
 	TEMP_MAX = lib["TEMP_MAX"].as<int>();
 	TEMP_MIN = lib["TEMP_MIN"].as<int>();
 	HUMI_MAX = lib["HUMI_MAX"].as<int>();
