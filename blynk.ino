@@ -1,3 +1,5 @@
+#include "hardware.h"
+
 #define BL_LIGHT  V1
 #define BL_PUMP_MIX  V2
 #define BL_FAN	  V3

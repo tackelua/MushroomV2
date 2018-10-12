@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MushroomV2", "MushroomV2.vcxproj", "{C5F80730-F44F-4478-BDAE-6634EFC2CA88}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DavidL-prj3-mty", "..\..\..\..\Google Drive\Gits\David-Lieu\DavidL-prj3-mty\DavidL-prj3-mty.vcxproj", "{30E7C1D1-DCB1-4065-88BB-611C44ED5307}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -15,6 +17,10 @@ Global
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Debug|x86.Build.0 = Debug|Win32
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.ActiveCfg = Release|Win32
 		{C5F80730-F44F-4478-BDAE-6634EFC2CA88}.Release|x86.Build.0 = Release|Win32
+		{30E7C1D1-DCB1-4065-88BB-611C44ED5307}.Debug|x86.ActiveCfg = Debug|Win32
+		{30E7C1D1-DCB1-4065-88BB-611C44ED5307}.Debug|x86.Build.0 = Debug|Win32
+		{30E7C1D1-DCB1-4065-88BB-611C44ED5307}.Release|x86.ActiveCfg = Release|Win32
+		{30E7C1D1-DCB1-4065-88BB-611C44ED5307}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
