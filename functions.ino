@@ -270,7 +270,7 @@ bool create_logs(String relayName, bool status, bool isCommandFromApp) {
 }
 
 void control(int pin, bool status, bool isCommandFromApp) { //status = true -> ON; false -> OFF
-	
+
 	if ((pin == PUMP_FLOOR) && (STT_PUMP_FLOOR != status)) {
 		t_pump_floor_change = millis();
 		STT_PUMP_FLOOR = status;
@@ -723,15 +723,9 @@ void control_stm32_message(String msg) {
 			light = l0;
 		}
 
-		bool w0 = int(stm32_msg_get_params(msg, "w0"));
-		if (w0 != 0) {
-			water_low = w0;
-		}
+		water_low = int(stm32_msg_get_params(msg, "w0"));
 
-		bool w1 = int(stm32_msg_get_params(msg, "w1"));
-		if (w1 != 0) {
-			water_high = w1;
-		}
+		water_high = int(stm32_msg_get_params(msg, "w1"));
 
 		update_sensor(0);
 	}
