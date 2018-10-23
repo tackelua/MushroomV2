@@ -1,4 +1,7 @@
 .vs/
 __vm/
 Debug/
-Release/
+!Release/
+Release/*
+!Release/MushroomV2.bin
+desktop.ini

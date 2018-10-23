@@ -478,7 +478,6 @@ void auto_control() {
 	if (pump_floor_on) {
 		DEBUG.println("AUTO PUMP_FLOOR OFF");
 		control(PUMP_FLOOR, true, false);
-		create_logs("Pump_Floor", false, false);
 	}
 	//+ PUMP_FLOOR tự tắt sau 90s
 	if ((millis() - t_pump_floor_change) > 90000) {
@@ -734,8 +733,17 @@ void control_stm32_message(String msg) {
 		send_time_to_stm32();
 	}
 
-	if (STM32_PRE_STT_PUMP_MIX != STT_PUMP_MIX) {
-		create_logs("Mist", STT_PUMP_MIX, flag_isCommandFromApp);
+	if (STT_PUMP_MIX != STM32_PRE_STT_PUMP_MIX) {
+		create_logs("Pump_Mix", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_PUMP_FLOOR != STM32_PRE_STT_PUMP_FLOOR) {
+		create_logs("Pump_Floor", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_FAN != STM32_PRE_STT_FAN) {
+		create_logs("Fan", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
+		create_logs("Light", STT_PUMP_MIX, flag_isCommandFromApp);
 	}
 
 	STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;

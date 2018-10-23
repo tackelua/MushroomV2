@@ -20,7 +20,7 @@
 #include <FS.h>
 
 
-#define __VERSION__	"3.0.3"
+#define __VERSION__	"3.0.4b"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
