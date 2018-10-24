@@ -20,7 +20,6 @@
     <None Include="requirements_firmware_mushroom.docx">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="blynk.ino" />
     <None Include="SmartMushroomV2.pdf">
       <Filter>Resource Files</Filter>
     </None>

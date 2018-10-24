@@ -22,7 +22,7 @@ void mqtt_reconnect();
 void mqtt_init();
 void mqtt_loop();
 bool mqtt_publish(String topic, String payload, bool retain = false);
-void handleTopic__Mushroom_Library_HubID(String mqtt_Message);
+void handleTopic__Mushroom_Library_HubID(String mqtt_Message, bool save = true);
 
 #endif
 

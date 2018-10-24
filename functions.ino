@@ -84,20 +84,92 @@ void wifi_loop() {
 			WiFi.printDiag(DEBUG);
 			WiFi.stopSmartConfig();
 		}
-
 	}
 }
 
 void libraries_init() {
+	/*
+	if (SPIFFS.begin()) {
+		Serial.println("mounted file system");
+		if (SPIFFS.exists(file_libConfigs)) {
+			//file exists, reading and loading
+			Serial.println("reading configs file");
+			File configFile = SPIFFS.open(file_libConfigs, "r");
+			if (configFile) {
+				Serial.println("opened config file");
+				size_t size = configFile.size();
+				// Allocate a buffer to store contents of the file.
+				std::unique_ptr<char[]> buf(new char[size]);
+
+				configFile.readBytes(buf.get(), size);
+				DynamicJsonBuffer jsonBuffer;
+				JsonObject& json = jsonBuffer.parseObject(buf.get());
+				json.printTo(Serial);
+				if (json.success()) {
+					Serial.println("\nparsed json");
+					String product = json["product"];
+					if (product != "ibizatv") {
+						Serial.println("config invalid");
+					}
+					//
+					//	char token[LENGTH];
+					//	char device[LENGTH];
+					//	char input1[LENGTH];
+					//	char input2[LENGTH];
+					//	char input3[LENGTH];
+					//	char analogIn[LENGTH];
+					//	char output1[LENGTH];
+					//	char output2[LENGTH];
+					//	char output3[LENGTH];
+					//
+					strcpy(token, json["token"]);
+					strcpy(device, json["device"]);
+					strcpy(input1, json["input1"]);
+					strcpy(input2, json["input2"]);
+					strcpy(input3, json["input3"]);
+					strcpy(analogIn, json["analogIn"]);
+					strcpy(output1, json["output1"]);
+					strcpy(output2, json["output2"]);
+					strcpy(output3, json["output3"]);
+
+					Serial.print("token: "); Serial.println(token);
+					Serial.print("device: "); Serial.println(device);
+					Serial.print("input1: "); Serial.println(input1);
+					Serial.print("input2: "); Serial.println(input2);
+					Serial.print("input3: "); Serial.println(input3);
+					Serial.print("analogIn: "); Serial.println(analogIn);
+					Serial.print("output1: "); Serial.println(output1);
+					Serial.print("output2: "); Serial.println(output2);
+					Serial.print("output3: "); Serial.println(output3);
+
+					return;
+				}
+				else {
+					Serial.println("failed to load json configs");
+				}
+			}
+			else {
+				Serial.println("Can not open configs file");
+			}
+		}
+		else {
+			Serial.println("Not found configs.json");
+		}
+	}
+	else {
+		Serial.println("failed to mount FS");
+	}
+	*/
+
 	SPIFFS.begin();
 	File libConfigs;
-	libConfigs = SPIFFS.open(file_libConfigs, "w");
+	libConfigs = SPIFFS.open(file_libConfigs, "r");
 	if (libConfigs) {
 		String lib;
 		while (libConfigs.available()) {
-			lib += libConfigs.read();
+			lib += (char)libConfigs.read();
 		}
-		handleTopic__Mushroom_Library_HubID(lib);
+		handleTopic__Mushroom_Library_HubID(lib, false);
 	}
 	else {
 		DEBUG.println("\r\nLibraries not available");
@@ -237,37 +309,38 @@ void update_sensor(unsigned long interval) {
 		jsData.printTo(data);
 		mqtt_publish(("Mushroom/Sensor/" + HubID), data, true);
 
-		Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
-		Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
-		Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
+		//Blynk.virtualWrite(BL_TEMP, (abs(temp) > 200.0 ? -1 : (int)temp));
+		//Blynk.virtualWrite(BL_HUMI, (abs(humi) > 200.0 ? -1 : (int)humi));
+		//Blynk.virtualWrite(BL_LIGHT_SS, light == 1024 ? -1 : light);
 	}
 }
 
-bool create_logs(String relayName, bool status, bool isCommandFromApp) {
-	StaticJsonBuffer<500> jsLogBuffer;
-	JsonObject& jsLog = jsLogBuffer.createObject();
-	jsLog["HUB_ID"] = HubID;
-	String content = relayName;
-	content += status ? " on" : " off";
-	jsLog["Content"] = content;
-	jsLog["From"] = isCommandFromApp ? "APP" : "HUB";
-	jsLog["Timestamp"] = String(now());
 
-	String jsStrLog;
-	jsStrLog.reserve(150);
-	jsLog.printTo(jsStrLog);
-	bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
-	String strTime = (F("["));
-	strTime += (hour() < 10 ? String("0") + hour() : hour());
-	strTime += (F(":"));
-	strTime += (minute() < 10 ? String("0") + minute() : minute());
-	strTime += (F(":"));
-	strTime += (second() < 10 ? String("0") + second() : second());
-	strTime += (F("] "));
-	Blynk.virtualWrite(V0, strTime + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")\r\n");
-	Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
-	return res;
-}
+//bool create_logs(String relayName, bool status, bool isCommandFromApp) {
+//	//StaticJsonBuffer<500> jsLogBuffer;
+//	//JsonObject& jsLog = jsLogBuffer.createObject();
+//	//jsLog["HUB_ID"] = HubID;
+//	//String content = relayName;
+//	//content += status ? " on" : " off";
+//	//jsLog["Content"] = content;
+//	//jsLog["From"] = isCommandFromApp ? "APP" : "HUB";
+//	//jsLog["Timestamp"] = String(now());
+//
+//	//String jsStrLog;
+//	//jsStrLog.reserve(150);
+//	//jsLog.printTo(jsStrLog);
+//	//bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
+//	//String strTime = (F("["));
+//	//strTime += (hour() < 10 ? String("0") + hour() : hour());
+//	//strTime += (F(":"));
+//	//strTime += (minute() < 10 ? String("0") + minute() : minute());
+//	//strTime += (F(":"));
+//	//strTime += (second() < 10 ? String("0") + second() : second());
+//	//strTime += (F("] "));
+//	//Blynk.virtualWrite(V0, strTime + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")\r\n");
+//	//Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
+//	//return res;
+//}
 
 void control(int pin, bool status, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 
@@ -328,9 +401,9 @@ void send_status_to_server() {
 	jsStatus.printTo(jsStatusStr);
 	mqtt_publish("Mushroom/Commands/RESPONSE/" + HubID, jsStatusStr, true);
 
-	Blynk.virtualWrite(BL_PUMP_MIX, STT_PUMP_MIX);
-	Blynk.virtualWrite(BL_FAN, STT_FAN);
-	Blynk.virtualWrite(BL_LIGHT, STT_LIGHT);
+	//Blynk.virtualWrite(BL_PUMP_MIX, STT_PUMP_MIX);
+	//Blynk.virtualWrite(BL_FAN, STT_FAN);
+	//Blynk.virtualWrite(BL_LIGHT, STT_LIGHT);
 }
 
 String make_status_string_to_stm32() {

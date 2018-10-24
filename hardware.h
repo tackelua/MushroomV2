@@ -10,7 +10,11 @@
 
 #define STM32 Serial
 //#define DEBUG Serial
+
+#ifndef DEBUG
 extern SoftwareSerial DEBUG;
+#endif // !DEBUG
+
 
 
 //#include "mqtt_helper.h"

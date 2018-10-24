@@ -13,14 +13,14 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
-#define BLYNK_PRINT Serial
-#include <BlynkSimpleEsp8266.h>
+//#define BLYNK_PRINT Serial
+//#include <BlynkSimpleEsp8266.h>
 #include "hardware.h"
 #include "mqtt_helper.h"
 #include <FS.h>
 
 
-#define __VERSION__	"3.1.0"
+#define __VERSION__	"3.1.1"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
@@ -47,7 +47,7 @@ String getID() {
 	id.toUpperCase();
 	return id.substring(id.length() - 6);
 }
-String HubID = getID();
+String HubID;// = getID();
 
 void setup()
 {
@@ -59,10 +59,15 @@ void setup()
 	DEBUG.begin(74880);
 	DEBUG.setTimeout(20);
 
-	DEBUG.print(("Firmware Version: "));
+	DEBUG.print(("\r\nFirmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
-	//libraries_init();
+	HubID = getID();
+	DEBUG.print(("\r\nHubID: "));
+	DEBUG.println(HubID);
+	DEBUG.println();
+
+	libraries_init();
 	wifi_init();
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, OFF);

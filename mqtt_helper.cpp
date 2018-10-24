@@ -20,7 +20,7 @@ extern bool skip_auto_pump_mix;
 extern bool skip_auto_light;
 extern bool skip_auto_fan; 
 
-const char* file_libConfigs = "configs.cfg";
+const char* file_libConfigs = "/configs.json";
 const char* mqtt_server = "mic.duytan.edu.vn";
 const char* mqtt_user = "Mic@DTU2017";
 const char* mqtt_password = "Mic@DTU2017!@#";
@@ -31,7 +31,7 @@ const String off_ = "OFF";
 
 int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
 long DATE_HAVERST_PHASE;
-long SENSOR_UPDATE_INTERVAL = 5000;
+long SENSOR_UPDATE_INTERVAL = 30000;
 bool library = false;
 
 extern String timeStr;
@@ -116,25 +116,28 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	}
 }
 
-void handleTopic__Mushroom_Library_HubID(String mqtt_Message) {
+void handleTopic__Mushroom_Library_HubID(String mqtt_Message, bool save) {
 	const size_t bufferSize = JSON_OBJECT_SIZE(9) + 300;
-	DynamicJsonBuffer jsonBuffer(bufferSize);
+	DynamicJsonBuffer jsonBuffer(500);
 	JsonObject& lib = jsonBuffer.parseObject(mqtt_Message);
 	if (!lib.success())
 	{
 		DEBUG.println(F("\r\nParse Libs failed"));
-		DEBUG.println(mqtt_Message);
+		//DEBUG.println(mqtt_Message);
 		return;
 	}
-	File libConfigs;
-	libConfigs = SPIFFS.open(file_libConfigs, "w");
-	if (libConfigs) {
-		DEBUG.println(mqtt_Message);
-		libConfigs.print(mqtt_Message);
-		//libConfigs.flush();
-		delay(1000);
-		DEBUG.println(F("Saved libraries"));
-		libConfigs.close();
+
+	if (save) {
+		File libConfigs;
+		libConfigs = SPIFFS.open(file_libConfigs, "w");
+		if (libConfigs) {
+			//lib.prettyPrintTo(DEBUG);
+			lib.printTo(libConfigs);
+			libConfigs.close();
+		}
+		else {
+			DEBUG.println(F("failed to open configs file for writing"));
+		}
 	}
 
 	TEMP_MAX = lib["TEMP_MAX"].as<int>();
@@ -150,7 +153,7 @@ void handleTopic__Mushroom_Library_HubID(String mqtt_Message) {
 		SENSOR_UPDATE_INTERVAL = interval;
 	}
 
-	String LIBRARY = lib["LIBRARY"];
+	String LIBRARY = lib["LIBRARY"].asString();
 	if (LIBRARY == "ENABLE") {
 		library = true;
 	}
@@ -167,6 +170,7 @@ void handleTopic__Mushroom_Library_HubID(String mqtt_Message) {
 	DEBUG.println("DATE_HAVERST_PHASE : " + String(DATE_HAVERST_PHASE));
 	DEBUG.println("SENSOR_UPDATE_INTERVAL : " + String(SENSOR_UPDATE_INTERVAL));
 	DEBUG.println("LIBRARY : " + LIBRARY);
+	DEBUG.println("\r\n");
 }
 #pragma endregion
 
