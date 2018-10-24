@@ -10,6 +10,7 @@
 #endif
 extern int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
 extern long DATE_HAVERST_PHASE;
+extern long SENSOR_UPDATE_INTERVAL;
 extern bool library;
 extern String mqtt_Message;
 extern const String on_;

@@ -35,6 +35,9 @@
     <ClInclude Include="mqtt_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MQTT_MESSAGES_API.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mqtt_helper.cpp">

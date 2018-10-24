@@ -20,7 +20,7 @@
 #include <FS.h>
 
 
-#define __VERSION__	"3.0.4b"
+#define __VERSION__	"3.1.0"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
@@ -81,6 +81,6 @@ void loop()
 	mqtt_loop();
 	stm32_command_handle();
 	auto_control();
-	get_data_sensor(5000);
+	get_data_sensor(SENSOR_UPDATE_INTERVAL);
 	//Blynk.run();
 }
