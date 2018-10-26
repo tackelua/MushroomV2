@@ -26,8 +26,8 @@ const char* mqtt_user = "Mic@DTU2017";
 const char* mqtt_password = "Mic@DTU2017!@#";
 const uint16_t mqtt_port = 1883;
 
-const String on_ = "ON";
-const String off_ = "OFF";
+const String on_ = "on";
+const String off_ = "off";
 
 int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
 long DATE_HAVERST_PHASE;
@@ -220,37 +220,6 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		handleTopic__Mushroom_Library_HubID(mqtt_Message);
 	}
 
-	else if (topicStr == "Mushroom/Terminal") {
-		StaticJsonBuffer<500> jsonBuffer;
-		JsonObject& terminal = jsonBuffer.parseObject(mqtt_Message);
-		/*
-		Mushroom/Terminal
-		{
-		   "Command" : "FOTA",
-		   "Hub_ID" : "all",
-		   "Version" : "",
-		   "Url" : ""
-		}
-		*/
-		DEBUG.println(("Update firmware function"));
-		String command = terminal["Command"].as<String>();
-		if (command == "FOTA") {
-			String hub = terminal["Hub_ID"].as<String>();
-			if ((hub == HubID) || (hub == "all")) {
-				String ver = terminal["Version"].as<String>();
-				if (ver != _firmwareVersion) {
-					String url = terminal["Url"].as<String>();
-					mqtt_publish("Mushroom/Terminal/RESPONSE/" + HubID, "Updating new firmware " + ver);
-					DEBUG.print(("\nUpdating new firmware: "));
-					DEBUG.println(ver);
-					DEBUG.println(url);
-					updateFirmware(url);
-					DEBUG.println(("DONE!"));
-				}
-			}
-		}
-	}
-
 	else if (topicStr == "Mushroom/Terminal/" + HubID) {
 		if (mqtt_Message == "/restart") {
 			mqtt_publish("Mushroom/Terminal/RESPONSE/" + HubID, "Restarting");
@@ -306,6 +275,37 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		control_handle(mqtt_cmd);
 	}
 
+	else if (topicStr == "Mushroom/Terminal") {
+		StaticJsonBuffer<500> jsonBuffer;
+		JsonObject& terminal = jsonBuffer.parseObject(mqtt_Message);
+		/*
+		Mushroom/Terminal
+		{
+		   "Command" : "FOTA",
+		   "Hub_ID" : "all",
+		   "Version" : "",
+		   "Url" : ""
+		}
+		*/
+		DEBUG.println(("Update firmware function"));
+		String command = terminal["Command"].as<String>();
+		if (command == "FOTA") {
+			String hub = terminal["Hub_ID"].as<String>();
+			if ((hub == HubID) || (hub == "all")) {
+				String ver = terminal["Version"].as<String>();
+				if (ver != _firmwareVersion) {
+					String url = terminal["Url"].as<String>();
+					mqtt_publish("Mushroom/Terminal/RESPONSE/" + HubID, "Updating new firmware " + ver);
+					DEBUG.print(("\nUpdating new firmware: "));
+					DEBUG.println(ver);
+					DEBUG.println(url);
+					updateFirmware(url);
+					DEBUG.println(("DONE!"));
+				}
+			}
+		}
+	}
+
 	//DEBUG.print(("#2 FREE RAM : "));
 	//DEBUG.println(ESP.getFreeHeap());
 	//t = millis() - t;
@@ -313,7 +313,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 }
 
 void mqtt_reconnect() {  // Loop until we're reconnected
-	while (!mqtt_client.connected()) {
+	if (!mqtt_client.connected()) {
 		DEBUG.print(("\r\nAttempting MQTT connection..."));
 		//boolean connect(const char* id, const char* willTopic, uint8_t willQos, boolean willRetain, const char* willMessage);
 		if (mqtt_client.connect(HubID.c_str(), mqtt_user, mqtt_password, ("Mushroom/Status/" + HubID).c_str(), 0, true, String("{\"HUB_ID\":\"" + HubID + "\",\"STATUS\":\"OFFLINE\"}").c_str())) {

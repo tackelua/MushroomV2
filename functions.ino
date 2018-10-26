@@ -56,10 +56,20 @@ void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
 	WiFi.mode(WIFI_STA);
-	WiFi.begin("DTU", "");
 	DEBUG.println();
 	WiFi.printDiag(Serial);
 	DEBUG.println();
+
+	WiFiManager wifiManager;
+	wifiManager.autoConnect(String("MUSHROOM-" + HubID).c_str());
+	//WiFi.begin("DTU", "");
+
+	WiFi.waitForConnectResult();
+	if (WiFi.localIP() == INADDR_NONE) {
+		DEBUG.println("Can not get IP. Restart");
+		ESP.restart();
+		delay(1000);
+	}
 }
 
 void wifi_loop() {
@@ -316,31 +326,31 @@ void update_sensor(unsigned long interval) {
 }
 
 
-//bool create_logs(String relayName, bool status, bool isCommandFromApp) {
-//	//StaticJsonBuffer<500> jsLogBuffer;
-//	//JsonObject& jsLog = jsLogBuffer.createObject();
-//	//jsLog["HUB_ID"] = HubID;
-//	//String content = relayName;
-//	//content += status ? " on" : " off";
-//	//jsLog["Content"] = content;
-//	//jsLog["From"] = isCommandFromApp ? "APP" : "HUB";
-//	//jsLog["Timestamp"] = String(now());
-//
-//	//String jsStrLog;
-//	//jsStrLog.reserve(150);
-//	//jsLog.printTo(jsStrLog);
-//	//bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
-//	//String strTime = (F("["));
-//	//strTime += (hour() < 10 ? String("0") + hour() : hour());
-//	//strTime += (F(":"));
-//	//strTime += (minute() < 10 ? String("0") + minute() : minute());
-//	//strTime += (F(":"));
-//	//strTime += (second() < 10 ? String("0") + second() : second());
-//	//strTime += (F("] "));
-//	//Blynk.virtualWrite(V0, strTime + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")\r\n");
-//	//Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
-//	//return res;
-//}
+bool create_logs(String relayName, bool status, bool isCommandFromApp) {
+	StaticJsonBuffer<500> jsLogBuffer;
+	JsonObject& jsLog = jsLogBuffer.createObject();
+	jsLog["HUB_ID"] = HubID;
+	String content = relayName;
+	content += status ? " on" : " off";
+	jsLog["Content"] = content;
+	jsLog["From"] = isCommandFromApp ? "APP" : "HUB";
+	jsLog["Timestamp"] = String(now());
+
+	String jsStrLog;
+	jsStrLog.reserve(150);
+	jsLog.printTo(jsStrLog);
+	bool res = mqtt_publish("Mushroom/Logs/" + HubID, jsStrLog);
+	//String strTime = (F("["));
+	//strTime += (hour() < 10 ? String("0") + hour() : hour());
+	//strTime += (F(":"));
+	//strTime += (minute() < 10 ? String("0") + minute() : minute());
+	//strTime += (F(":"));
+	//strTime += (second() < 10 ? String("0") + second() : second());
+	//strTime += (F("] "));
+	//Blynk.virtualWrite(V0, strTime + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")\r\n");
+	//Blynk.notify("HUB " + HubID + " " + content + " (" + String(isCommandFromApp ? "APP" : "HUB") + ")");
+	return res;
+}
 
 void control(int pin, bool status, bool isCommandFromApp) { //status = true -> ON; false -> OFF
 
@@ -723,10 +733,10 @@ float stm32_msg_get_params(String msg, String params) {
 	return data.toFloat();
 }
 void control_stm32_message(String msg) {
-	//static bool STM32_PRE_STT_PUMP_MIX = false;
-	//static bool STM32_PRE_STT_PUMP_FLOOR = false;
-	//static bool STM32_PRE_STT_FAN = false;
-	//static bool STM32_PRE_STT_LIGHT = false;
+	static bool STM32_PRE_STT_PUMP_MIX = false;
+	static bool STM32_PRE_STT_PUMP_FLOOR = false;
+	static bool STM32_PRE_STT_FAN = false;
+	static bool STM32_PRE_STT_LIGHT = false;
 	msg.trim();
 	if (msg.startsWith("res:relay-status-all|HUB|")) {
 		String STT = msg.substring(String("res:relay-status-all|HUB|").length() - 1); //tính thứ tự relay từ 1
@@ -814,23 +824,23 @@ void control_stm32_message(String msg) {
 		send_time_to_stm32();
 	}
 
-	//if (STT_PUMP_MIX != STM32_PRE_STT_PUMP_MIX) {
-	//	create_logs("Pump_Mix", STT_PUMP_MIX, flag_isCommandFromApp);
-	//}
-	//if (STT_PUMP_FLOOR != STM32_PRE_STT_PUMP_FLOOR) {
-	//	create_logs("Pump_Floor", STT_PUMP_MIX, flag_isCommandFromApp);
-	//}
-	//if (STT_FAN != STM32_PRE_STT_FAN) {
-	//	create_logs("Fan", STT_PUMP_MIX, flag_isCommandFromApp);
-	//}
-	//if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
-	//	create_logs("Light", STT_PUMP_MIX, flag_isCommandFromApp);
-	//}
+	if (STT_PUMP_MIX != STM32_PRE_STT_PUMP_MIX) {
+		create_logs("Pump_Mix", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_PUMP_FLOOR != STM32_PRE_STT_PUMP_FLOOR) {
+		create_logs("Pump_Floor", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_FAN != STM32_PRE_STT_FAN) {
+		create_logs("Fan", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
+	if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
+		create_logs("Light", STT_PUMP_MIX, flag_isCommandFromApp);
+	}
 
-	//STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;
-	//STM32_PRE_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
-	//STM32_PRE_STT_FAN = STT_FAN;
-	//STM32_PRE_STT_LIGHT = STT_LIGHT;
+	STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;
+	STM32_PRE_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
+	STM32_PRE_STT_FAN = STT_FAN;
+	STM32_PRE_STT_LIGHT = STT_LIGHT;
 }
 
 //void serial_command_handle() {

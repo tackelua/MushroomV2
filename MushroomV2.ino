@@ -10,6 +10,7 @@
 #include <ESP8266httpUpdate.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiManager.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
@@ -20,7 +21,7 @@
 #include <FS.h>
 
 
-#define __VERSION__	"3.1.1"
+#define __VERSION__	"3.1.1b2"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
