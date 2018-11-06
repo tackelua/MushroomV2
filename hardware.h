@@ -24,11 +24,12 @@ enum STM32_RELAY {
 	LIGHT = 1,
 	PUMP_MIX,
 	PUMP_FLOOR,
-	FAN
+	FAN_MIX,
+	FAN_WIND
 };
 
-#define ON	LOW 
-#define OFF	HIGH
+#define ON	HIGH 
+#define OFF	LOW
 
 #endif
 

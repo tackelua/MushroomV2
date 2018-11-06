@@ -21,14 +21,9 @@
 #include <FS.h>
 
 
-#define __VERSION__	"3.1.1b2"
+#define __VERSION__	"3.1.3b"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
-
-bool STT_PUMP_MIX = false;
-bool STT_PUMP_FLOOR = false;
-bool STT_FAN = false;
-bool STT_LIGHT = false;
 
 bool flag_schedule_pump_floor = false;
 bool flag_isCommandFromApp;

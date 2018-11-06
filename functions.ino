@@ -3,8 +3,19 @@ float humi;
 int light;
 bool water_high;
 bool water_low;
+ 
+bool STT_PUMP_MIX = false;
+bool STT_PUMP_FLOOR = false; 
+bool STT_FAN_MIX = OFF;
+bool STT_FAN_WIND = OFF;
+bool STT_LIGHT = false; 
 
-unsigned long t_pump_mix_change, t_pump_floor_change, t_fan_change, t_light_change;
+unsigned long t_pump_mix_change = -1;
+unsigned long t_pump_floor_change = -1;
+unsigned long t_fan_mix_change = -1;
+unsigned long t_fan_wind_change = -1;
+unsigned long t_light_change = -1;
+
 bool pin_change = false;
 String CMD_ID = "         ";
 
@@ -368,11 +379,11 @@ void control(int pin, bool status, bool isCommandFromApp) { //status = true -> O
 		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
-	if ((pin == FAN) && (STT_FAN != status)) {
-		t_fan_change = millis();
-		STT_FAN = status;
+	if ((pin == FAN_MIX) && (STT_FAN_MIX != status)) {
+		t_fan_mix_change = millis();
+		STT_FAN_MIX = status;
 		pin_change = true;
-		DEBUG.print(("FAN: "));
+		DEBUG.print(("FAN_MIX: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == LIGHT) && (STT_LIGHT != status)) {
@@ -403,7 +414,7 @@ void send_status_to_server() {
 	jsStatus["TIMESTAMP"] = now();
 	jsStatus["TYPE"] = commandType;
 	jsStatus["MIST"] = STT_PUMP_MIX ? on_ : off_;
-	jsStatus["FAN"] = STT_FAN ? on_ : off_;
+	jsStatus["FAN"] = STT_FAN_MIX ? on_ : off_;
 	jsStatus["LIGHT"] = STT_LIGHT ? on_ : off_;
 
 	String jsStatusStr;
@@ -412,13 +423,13 @@ void send_status_to_server() {
 	mqtt_publish("Mushroom/Commands/RESPONSE/" + HubID, jsStatusStr, true);
 
 	//Blynk.virtualWrite(BL_PUMP_MIX, STT_PUMP_MIX);
-	//Blynk.virtualWrite(BL_FAN, STT_FAN);
+	//Blynk.virtualWrite(BL_FAN, STT_FAN_MIX);
 	//Blynk.virtualWrite(BL_LIGHT, STT_LIGHT);
 }
 
 String make_status_string_to_stm32() {
-	//PUMP1 - PUMP2 - FAN - LIGHT - WATER_IN
-	String s = String(STT_LIGHT) + String(STT_PUMP_MIX) + String(STT_PUMP_FLOOR) + String(STT_FAN);
+	//PUMP1 - PUMP2 - FAN_MIX - LIGHT - WATER_IN
+	String s = String(STT_LIGHT) + String(STT_PUMP_MIX) + String(STT_PUMP_FLOOR) + String(STT_FAN_MIX);
 	return s;
 }
 
@@ -455,7 +466,7 @@ void send_time_to_stm32() {
 /*
 bool skip_auto_light = false;
 bool skip_auto_pump_mix = false;
-bool skip_auto_fan = false;
+bool skip_auto_fan_mix = false;
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
@@ -474,12 +485,12 @@ void auto_control() {
 			control(PUMP_FLOOR, false, true, false);
 		}
 	}
-	//+ FAN tự tắt sau 20 phút
-	if ((millis() - t_fan_change) > (20 * SECS_PER_MIN)) {
-		skip_auto_fan = false;
-		if (STT_FAN) {
-			DEBUG.println("AUTO FAN OFF");
-			control(FAN, false, true, false);
+	//+ FAN_MIX tự tắt sau 20 phút
+	if ((millis() - t_fan_mix_change) > (20 * SECS_PER_MIN)) {
+		skip_auto_fan_mix = false;
+		if (STT_FAN_MIX) {
+			DEBUG.println("AUTO FAN_MIX OFF");
+			control(FAN_MIX, false, true, false);
 		}
 	}
 	//+ LIGHT tự tắt sau 3 tiếng
@@ -508,28 +519,28 @@ void auto_control() {
 	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
 	if (((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0)) {
 		skip_auto_pump_mix = true;
-		skip_auto_fan = true;
+		skip_auto_fan_mix = true;
 		DEBUG.println("AUTO PUMP_MIX ON");
 		DEBUG.println("AUTO PUMP_FLOOR ON");
 		control(PUMP_FLOOR, true, true, false);
 		control(PUMP_MIX, true, true, false);
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true, true, false);
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 3 phút, mỗi lần bật cách nhau 1 giờ.
 	if (!skip_auto_pump_mix && library && ((int(temp) > TEMP_MAX) || (int(humi) < HUMI_MIN)) && ((millis() - t_pump_mix_change) > 3600000) && !STT_PUMP_MIX) {
 		DEBUG.println("AUTO PUMP_MIX ON");
 		control(PUMP_MIX, true, true, false);
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true, true, false);
 	}
 	//-------------------
 
 	//c. Bật tắt quạt
-	if (!skip_auto_fan && library && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_change) > 3600000) && !STT_FAN) {
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, true, false);
+	if (!skip_auto_fan_mix && library && (((int)humi > HUMI_MAX) || ((int)temp > TEMP_MAX)) && ((millis() - t_fan_mix_change) > 3600000) && !STT_FAN_MIX) {
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true, true, false);
 	}
 	yield();
 }
@@ -538,11 +549,28 @@ void auto_control() {
 
 bool skip_auto_light = false;
 bool skip_auto_pump_mix = false;
-bool skip_auto_fan = false;
+bool skip_auto_fan_mix = false;
+bool skip_auto_fan_wind = false;
+
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
+	//auto trở lại sau khi điều khiển 5 phút
+	unsigned long t_auto_return = 1 * 60000;
+	if (skip_auto_light && (millis() - t_light_change) > t_auto_return) {
+		skip_auto_light = false;
+	}
+	if (skip_auto_pump_mix && (millis() - t_pump_mix_change) > t_auto_return) {
+		skip_auto_pump_mix = false;
+	}
+	if (skip_auto_fan_mix && (millis() - t_fan_mix_change) > t_auto_return) {
+		skip_auto_fan_mix = false;
+	}
+	if (skip_auto_fan_wind && (millis() - t_fan_wind_change) > t_auto_return) {
+		skip_auto_fan_wind = false;
+	}
+	//==============================================================
 
 	//+ LIGHT tự tắt sau 60 phút
 	if ((millis() - t_light_change) > (60 * 1000 * SECS_PER_MIN)) {
@@ -554,8 +582,21 @@ void auto_control() {
 	}
 
 	bool pump_floor_on = false;
-	//+ PUMP_MIX tự tắt sau 180s
-	if ((millis() - t_pump_mix_change) > (180 * 1000)) {
+	//+ PUMP_MIX tự tắt sau 180s sau đó bật PUMP_FLOOR
+	if (hour() >= 11 && hour() < 15) {
+		if ((millis() - t_pump_mix_change) > (6 * 60 * 1000)) {
+			skip_auto_pump_mix = false;
+			if (STT_PUMP_MIX) {
+				DEBUG.println("AUTO PUMP_MIX OFF");
+				control(PUMP_MIX, false, false);
+
+				if (flag_schedule_pump_floor) {
+					pump_floor_on = true;
+				}
+			}
+		}
+	}
+	else if ((millis() - t_pump_mix_change) > (180 * 1000)) {
 		skip_auto_pump_mix = false;
 		if (STT_PUMP_MIX) {
 			DEBUG.println("AUTO PUMP_MIX OFF");
@@ -566,6 +607,7 @@ void auto_control() {
 			}
 		}
 	}
+
 	if (pump_floor_on) {
 		DEBUG.println("AUTO PUMP_FLOOR OFF");
 		control(PUMP_FLOOR, true, false);
@@ -577,12 +619,29 @@ void auto_control() {
 			control(PUMP_FLOOR, false, false);
 		}
 	}
-	//+ FAN tự tắt sau 185s
-	if ((millis() - t_fan_change) > 185000) {
-		skip_auto_fan = false;
-		if (STT_FAN) {
-			DEBUG.println("AUTO FAN OFF");
-			control(FAN, false, false);
+	//+ FAN_MIX tự tắt sau 185s
+	if (hour() >= 11 && hour() < 15) {
+		if ((millis() - t_fan_mix_change) > (6 * 60 * 1000) + 5) {
+			skip_auto_fan_mix = false;
+			if (STT_FAN_MIX) {
+				DEBUG.println("AUTO FAN_MIX OFF");
+				control(FAN_MIX, false, false);
+			}
+		}
+	}
+	else if ((millis() - t_fan_mix_change) > 185000) {
+		skip_auto_fan_mix = false;
+		if (STT_FAN_MIX) {
+			DEBUG.println("AUTO FAN_MIX OFF");
+			control(FAN_MIX, false, false);
+		}
+	}
+	//+ FAN_WIND tự tắt sau 10 phút
+	if ((millis() - t_fan_wind_change) > (10 * 1000 * SECS_PER_MIN)) {
+		skip_auto_fan_wind = false;
+		if (STT_FAN_WIND) {
+			DEBUG.println("AUTO FAN_WIND OFF");
+			control(FAN_WIND, false, false);
 		}
 	}
 
@@ -609,9 +668,9 @@ void auto_control() {
 	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
 	if (((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0 || second() == 1)) {
 		skip_auto_pump_mix = true;
-		skip_auto_fan = true;
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, false);
+		skip_auto_fan_mix = true;
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true, false);
 		DEBUG.println("AUTO PUMP_MIX ON");
 		control(PUMP_MIX, true, false);
 
@@ -623,45 +682,190 @@ void auto_control() {
 	}
 
 	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 90s, mỗi lần check điều kiện cách nhau 30 phút.
-	if (!skip_auto_pump_mix && library && ((temp != -1 && temp > TEMP_MAX) && (humi != -1 && humi < HUMI_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN)) && !STT_PUMP_MIX) {
+	if (!skip_auto_pump_mix && library && ((temp != -1 && temp > TEMP_MAX) && (humi != -1 && humi < HUMI_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN))/* && !STT_PUMP_MIX*/) {
 		if (now() > DATE_HAVERST_PHASE) {
 			DEBUG.println("AUTO PUMP_MIX ON");
 			control(PUMP_MIX, true, false);
-			DEBUG.println("AUTO FAN ON");
-			control(FAN, true, false);
+			DEBUG.println("AUTO FAN_MIX ON");
+			control(FAN_MIX, true, false);
 
 			flag_schedule_pump_floor = true;
 		}
 		else {
 			DEBUG.println("AUTO PUMP_FLOOR ON");
 			control(PUMP_FLOOR, true, false);
-			DEBUG.println("AUTO FAN ON");
-			control(FAN, true, false);
+			DEBUG.println("AUTO FAN_MIX ON");
+			control(FAN_MIX, true, false);
 		}
 	}
 	//-------------------
 
 	//c. Bật tắt quạt
-	//Bật quạt FAN mỗi 15 phút
-	if (!skip_auto_fan && ((millis() - t_fan_change) > (15 * 1000 * SECS_PER_MIN)) && !STT_FAN) {
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, false);
+	//Bật quạt FAN_MIX mỗi 15 phút
+	if (!skip_auto_fan_mix && ((millis() - t_fan_mix_change) > (15 * 1000 * SECS_PER_MIN)) && !STT_FAN_MIX) {
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true, false);
+	}
+
+	//FAN_WIND bật nếu thỏa điều kiện, mỗi lần check cách nhau 30 phút
+	if (!skip_auto_fan_wind && library && ((humi != -1 && humi > HUMI_MAX) || (temp != -1 && temp > TEMP_MAX)) && ((millis() - t_fan_wind_change) > (30 * 1000 * SECS_PER_MIN)) && !STT_FAN_WIND) {
+		DEBUG.println("AUTO FAN_WIND ON");
+		control(FAN_WIND, true, false);
 	}
 
 	//TESTCASE 4, mỗi lần check cách nhau 30 phút
 	if (library && ((humi != -1 && humi < HUMI_MIN) && (temp != -1 && temp < TEMP_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN))) {
+		DEBUG.println("AUTO FAN_WIND OFF");
+		control(FAN_WIND, false, false);
+
 		DEBUG.println("AUTO PUMP_MIX ON");
 		control(PUMP_MIX, true, false);
 
-		DEBUG.println("AUTO FAN ON");
-		control(FAN, true, false);
+		DEBUG.println("AUTO FAN_MIX ON");
+		control(FAN_MIX, true,  false);
 	}
 
-	if (pin_change) {
-		send_control_message_all_to_stm32();
-	}
 	delay(1);
 }
+
+//void auto_control() {
+//	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
+//	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
+//
+//	//auto trở lại sau khi điều khiển 5 phút
+//	unsigned long t_auto_return = 1 * 60000;
+//	if (skip_auto_light && (millis() - t_light_change) > t_auto_return) {
+//		skip_auto_light = false;
+//	}
+//	if (skip_auto_pump_mix && (millis() - t_pump_mix_change) > t_auto_return) {
+//		skip_auto_pump_mix = false;
+//	}
+//	if (skip_auto_fan_mix && (millis() - t_fan_mix_change) > t_auto_return) {
+//		skip_auto_fan_mix = false;
+//	}
+//	if (skip_auto_fan_wind && (millis() - t_fan_wind_change) > t_auto_return) {
+//		skip_auto_fan_wind = false;
+//	}
+//	//==============================================================
+//
+//	//+ LIGHT tự tắt sau 60 phút
+//	if ((millis() - t_light_change) > (60 * 1000 * SECS_PER_MIN)) {
+//		skip_auto_light = false;
+//		if (STT_LIGHT) {
+//			DEBUG.println("AUTO LIGHT OFF");
+//			control(LIGHT, false, false);
+//		}
+//	}
+//
+//	bool pump_floor_on = false;
+//	//+ PUMP_MIX tự tắt sau 180s
+//	if ((millis() - t_pump_mix_change) > (180 * 1000)) {
+//		skip_auto_pump_mix = false;
+//		if (STT_PUMP_MIX) {
+//			DEBUG.println("AUTO PUMP_MIX OFF");
+//			control(PUMP_MIX, false, false);
+//
+//			if (flag_schedule_pump_floor) {
+//				pump_floor_on = true;
+//			}
+//		}
+//	}
+//	if (pump_floor_on) {
+//		DEBUG.println("AUTO PUMP_FLOOR OFF");
+//		control(PUMP_FLOOR, true, false);
+//	}
+//	//+ PUMP_FLOOR tự tắt sau 90s
+//	if ((millis() - t_pump_floor_change) > 90000) {
+//		if (STT_PUMP_FLOOR) {
+//			DEBUG.println("AUTO PUMP_FLOOR OFF");
+//			control(PUMP_FLOOR, false, false);
+//		}
+//	}
+//	//+ FAN_MIX tự tắt sau 185s
+//	if ((millis() - t_fan_mix_change) > 185000) {
+//		skip_auto_fan_mix = false;
+//		if (STT_FAN_MIX) {
+//			DEBUG.println("AUTO FAN_MIX OFF");
+//			control(FAN_MIX, false, false);
+//		}
+//	}
+//
+//	////+ LCD BACKLIGHT tự tắt sau 2 phút
+//	//if (stt_lcd_backlight && (millis() - t_lcd_backlight_change) > (2 * 1000 * SECS_PER_MIN)) {
+//	//	DEBUG.println("AUTO LCD BACKLIGHT OFF");
+//	//	lcd.noBacklight();
+//	//}
+//	//==============================================================
+//	//1/ Bật tắt đèn
+//	if (!skip_auto_light) {
+//		if (library && (!STT_LIGHT) && (light != -1 && light < LIGHT_MIN) && (hour() >= 6) && (hour() <= 18)) {
+//			DEBUG.println("AUTO LIGHT ON");
+//			control(LIGHT, true, false);
+//		}
+//		else if (library && (light != -1 && light > LIGHT_MAX) && STT_LIGHT) {
+//			DEBUG.println("AUTO LIGHT OFF");
+//			control(LIGHT, false, false);
+//		}
+//	}
+//	//-------------------
+//
+//	//2. Bật tắt phun sương
+//	//a. Phun trực tiếp vào phôi vào lúc 6h và 16h
+//	if (((hour() == 6) || (hour() == 16)) && (minute() == 0) && (second() == 0 || second() == 1)) {
+//		skip_auto_pump_mix = true;
+//		skip_auto_fan_mix = true;
+//		DEBUG.println("AUTO FAN_MIX ON");
+//		control(FAN_MIX, true, false);
+//		DEBUG.println("AUTO PUMP_MIX ON");
+//		control(PUMP_MIX, true, false);
+//
+//
+//		//DEBUG.println("AUTO PUMP_FLOOR ON");
+//		//control(PUMP_FLOOR, true, true, false);
+//		//DEBUG.println("AUTO FAN_WIND ON");
+//		//control(FAN_WIND, true, true, false);
+//	}
+//
+//	//b. Phun sương làm mát, duy trì độ ẩm. Thời gian bật: 90s, mỗi lần check điều kiện cách nhau 30 phút.
+//	if (!skip_auto_pump_mix && library && ((temp != -1 && temp > TEMP_MAX) && (humi != -1 && humi < HUMI_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN)) && !STT_PUMP_MIX) {
+//		if (now() > DATE_HAVERST_PHASE) {
+//			DEBUG.println("AUTO PUMP_MIX ON");
+//			control(PUMP_MIX, true, false);
+//			DEBUG.println("AUTO FAN_MIX ON");
+//			control(FAN_MIX, true, false);
+//
+//			flag_schedule_pump_floor = true;
+//		}
+//		else {
+//			DEBUG.println("AUTO PUMP_FLOOR ON");
+//			control(PUMP_FLOOR, true, false);
+//			DEBUG.println("AUTO FAN_MIX ON");
+//			control(FAN_MIX, true, false);
+//		}
+//	}
+//	//-------------------
+//
+//	//c. Bật tắt quạt
+//	//Bật quạt FAN_MIX mỗi 15 phút
+//	if (!skip_auto_fan_mix && ((millis() - t_fan_mix_change) > (15 * 1000 * SECS_PER_MIN)) && !STT_FAN_MIX) {
+//		DEBUG.println("AUTO FAN_MIX ON");
+//		control(FAN_MIX, true, false);
+//	}
+//
+//	//TESTCASE 4, mỗi lần check cách nhau 30 phút
+//	if (library && ((humi != -1 && humi < HUMI_MIN) && (temp != -1 && temp < TEMP_MIN)) && ((millis() - t_pump_mix_change) > (30 * 1000 * SECS_PER_MIN))) {
+//		DEBUG.println("AUTO PUMP_MIX ON");
+//		control(PUMP_MIX, true, false);
+//
+//		DEBUG.println("AUTO FAN_MIX ON");
+//		control(FAN_MIX, true, false);
+//	}
+//
+//	if (pin_change) {
+//		send_control_message_all_to_stm32();
+//	}
+//	delay(1);
+//}
 
 void updateFirmware(String url) {
 	ESPhttpUpdate.rebootOnUpdate(true);
@@ -707,13 +911,13 @@ void control_handle(String _cmd) {
 			control(PUMP_MIX, false, true);
 		}
 
-		if (cmd.indexOf("FAN ON") > -1) {
-			skip_auto_fan = true;
-			control(FAN, true, true);
+		if (cmd.indexOf("FAN_MIX ON") > -1) {
+			skip_auto_fan_mix = true;
+			control(FAN_MIX, true, true);
 		}
-		if (cmd.indexOf("FAN OFF") > -1) {
-			skip_auto_fan = true;
-			control(FAN, false, true);
+		if (cmd.indexOf("FAN_MIX OFF") > -1) {
+			skip_auto_fan_mix = true;
+			control(FAN_MIX, false, true);
 		}
 		if (cmd.indexOf("RESET WIFI") > -1) {
 			DEBUG.println(("Reset Wifi"));
@@ -740,7 +944,7 @@ void control_stm32_message(String msg) {
 	msg.trim();
 	if (msg.startsWith("res:relay-status-all|HUB|")) {
 		String STT = msg.substring(String("res:relay-status-all|HUB|").length() - 1); //tính thứ tự relay từ 1
-		//LIGHT - PUMP_MIX - PUMP_FLOOR - FAN
+		//LIGHT - PUMP_MIX - PUMP_FLOOR - FAN_MIX
 
 		if (STT[STM32_RELAY::LIGHT] == '1') {
 			STT_LIGHT = true;
@@ -763,17 +967,17 @@ void control_stm32_message(String msg) {
 			STT_PUMP_FLOOR = false;
 		}
 
-		if (STT[STM32_RELAY::FAN] == '1') {
-			STT_FAN = true;
+		if (STT[STM32_RELAY::FAN_MIX] == '1') {
+			STT_FAN_MIX = true;
 		}
-		else if (STT[STM32_RELAY::FAN] == '0') {
-			STT_FAN = false;
+		else if (STT[STM32_RELAY::FAN_MIX] == '0') {
+			STT_FAN_MIX = false;
 		}
 		send_status_to_server();
 	}
 	else if (msg.startsWith("res:relay-status|HUB|")) {
 		String RL = msg.substring(String("res:relay-status|HUB|").length());
-		//PUMP_MIX - PUMP_FLOOR - FAN - LIGHT - WATER_IN
+		//PUMP_MIX - PUMP_FLOOR - FAN_MIX - LIGHT - WATER_IN
 		int relay = RL.toInt();
 		String STT = RL.substring(RL.indexOf('|') + 1);
 		bool stt = STT[0];
@@ -785,8 +989,8 @@ void control_stm32_message(String msg) {
 		case PUMP_FLOOR:
 			STT_PUMP_FLOOR = stt;
 			break;
-		case FAN:
-			STT_FAN = stt;
+		case FAN_MIX:
+			STT_FAN_MIX = stt;
 			break;
 		case LIGHT:
 			STT_LIGHT = stt;
@@ -830,7 +1034,7 @@ void control_stm32_message(String msg) {
 	if (STT_PUMP_FLOOR != STM32_PRE_STT_PUMP_FLOOR) {
 		create_logs("Pump_Floor", STT_PUMP_MIX, flag_isCommandFromApp);
 	}
-	if (STT_FAN != STM32_PRE_STT_FAN) {
+	if (STT_FAN_MIX != STM32_PRE_STT_FAN) {
 		create_logs("Fan", STT_PUMP_MIX, flag_isCommandFromApp);
 	}
 	if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
@@ -839,7 +1043,7 @@ void control_stm32_message(String msg) {
 
 	STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;
 	STM32_PRE_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
-	STM32_PRE_STT_FAN = STT_FAN;
+	STM32_PRE_STT_FAN = STT_FAN_MIX;
 	STM32_PRE_STT_LIGHT = STT_LIGHT;
 }
 

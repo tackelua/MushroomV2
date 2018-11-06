@@ -18,7 +18,7 @@ extern bool flag_schedule_pump_floor;
 
 extern bool skip_auto_pump_mix;
 extern bool skip_auto_light;
-extern bool skip_auto_fan; 
+extern bool skip_auto_fan_mix; 
 
 const char* file_libConfigs = "/configs.json";
 const char* mqtt_server = "mic.duytan.edu.vn";
@@ -35,7 +35,7 @@ long SENSOR_UPDATE_INTERVAL = 30000;
 bool library = false;
 
 extern String timeStr;
-extern bool STT_PUMP_MIX, STT_FAN, STT_LIGHT;
+extern bool STT_PUMP_MIX, STT_FAN_MIX, STT_LIGHT;
 extern bool pin_change;
 extern void control(int pin, bool status, bool isCommandFromApp);
 extern void stm32_digitalWrite(int pin, bool status);
@@ -78,7 +78,9 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	{
 		skip_auto_pump_mix = true;
 		control(PUMP_MIX, true, isCommandFromApp);
-		control(PUMP_FLOOR, true, isCommandFromApp);
+		
+		//control(PUMP_FLOOR, true, isCommandFromApp);
+		flag_schedule_pump_floor = true;
 	}
 	else if (pump_mix_stt == off_)
 	{
@@ -102,13 +104,13 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	String fan_stt = commands["FAN"].as<String>();
 	if (fan_stt == on_)
 	{
-		skip_auto_fan = true;
-		control(FAN, true, isCommandFromApp);
+		skip_auto_fan_mix = true;
+		control(FAN_MIX, true, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
-		skip_auto_fan = true;
-		control(FAN, false, isCommandFromApp);
+		skip_auto_fan_mix = true;
+		control(FAN_MIX, false, isCommandFromApp);
 	}
 
 	if (pin_change) {
@@ -240,7 +242,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 			updateFirmware(url);
 			DEBUG.println(("DONE!"));
 		}
-		if (mqtt_Message.indexOf("/get version") > -1) {
+		if (mqtt_Message.startsWith("/v") || mqtt_Message.indexOf("/version") > -1) {
 			//StaticJsonBuffer<500> jsBuffer;
 			DynamicJsonBuffer jsBuffer(500);
 			JsonObject& jsData = jsBuffer.createObject();
@@ -252,7 +254,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 			jsData.printTo(data);
 			mqtt_publish("Mushroom/Terminal/RESPONSE/" + HubID, data);
 		}
-		else if (mqtt_Message.indexOf("/get library") > -1) {
+		else if (mqtt_Message.startsWith("/l") || mqtt_Message.indexOf("/library") > -1) {
 			//StaticJsonBuffer<500> jsBuffer;
 			DynamicJsonBuffer jsBuffer(500);
 			JsonObject& jsLib = jsBuffer.createObject();
