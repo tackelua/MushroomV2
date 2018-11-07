@@ -19,6 +19,7 @@ extern bool flag_schedule_pump_floor;
 extern bool skip_auto_pump_mix;
 extern bool skip_auto_light;
 extern bool skip_auto_fan_mix; 
+extern bool skip_auto_fan_wind;
 
 const char* file_libConfigs = "/configs.json";
 const char* mqtt_server = "mic.duytan.edu.vn";
@@ -105,12 +106,16 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	if (fan_stt == on_)
 	{
 		skip_auto_fan_mix = true;
+		skip_auto_fan_wind = true;
 		control(FAN_MIX, true, isCommandFromApp);
+		control(FAN_WIND, true, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
 		skip_auto_fan_mix = true;
+		skip_auto_fan_wind = true;
 		control(FAN_MIX, false, isCommandFromApp);
+		control(FAN_WIND, false, isCommandFromApp);
 	}
 
 	if (pin_change) {

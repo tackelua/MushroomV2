@@ -21,7 +21,7 @@
 #include <FS.h>
 
 
-#define __VERSION__	"3.1.3b"
+#define __VERSION__	"3.1.3c only for 17C80"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 
 
@@ -58,7 +58,7 @@ void setup()
 	DEBUG.print(("\r\nFirmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
-	HubID = getID();
+	HubID = "17C80"; // getID();
 	DEBUG.print(("\r\nHubID: "));
 	DEBUG.println(HubID);
 	DEBUG.println();

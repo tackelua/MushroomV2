@@ -386,6 +386,13 @@ void control(int pin, bool status, bool isCommandFromApp) { //status = true -> O
 		DEBUG.print(("FAN_MIX: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
+	if ((pin == FAN_WIND) && (STT_FAN_WIND != status)) {
+		t_fan_wind_change = millis();
+		STT_FAN_WIND = status;
+		pin_change = true;
+		DEBUG.print(("FAN_WIND: "));
+		DEBUG.println(status ? "ON" : "OFF");
+	}
 	if ((pin == LIGHT) && (STT_LIGHT != status)) {
 		t_light_change = millis();
 		STT_LIGHT = status;
@@ -414,7 +421,7 @@ void send_status_to_server() {
 	jsStatus["TIMESTAMP"] = now();
 	jsStatus["TYPE"] = commandType;
 	jsStatus["MIST"] = STT_PUMP_MIX ? on_ : off_;
-	jsStatus["FAN"] = STT_FAN_MIX ? on_ : off_;
+	jsStatus["FAN"] = STT_FAN_WIND ? on_ : off_;
 	jsStatus["LIGHT"] = STT_LIGHT ? on_ : off_;
 
 	String jsStatusStr;
@@ -429,7 +436,7 @@ void send_status_to_server() {
 
 String make_status_string_to_stm32() {
 	//PUMP1 - PUMP2 - FAN_MIX - LIGHT - WATER_IN
-	String s = String(STT_LIGHT) + String(STT_PUMP_MIX) + String(STT_PUMP_FLOOR) + String(STT_FAN_MIX);
+	String s = String(STT_LIGHT) + String(STT_PUMP_MIX) + String(STT_PUMP_FLOOR) + String(STT_FAN_MIX) + String(STT_FAN_WIND);
 	return s;
 }
 
@@ -725,6 +732,9 @@ void auto_control() {
 		control(FAN_MIX, true,  false);
 	}
 
+	if (pin_change) {
+		send_control_message_all_to_stm32();
+	}
 	delay(1);
 }
 
@@ -972,6 +982,13 @@ void control_stm32_message(String msg) {
 		}
 		else if (STT[STM32_RELAY::FAN_MIX] == '0') {
 			STT_FAN_MIX = false;
+		}
+
+		if (STT[STM32_RELAY::FAN_WIND] == '1') {
+			STT_FAN_WIND = true;
+		}
+		else if (STT[STM32_RELAY::FAN_WIND] == '0') {
+			STT_FAN_WIND = false;
 		}
 		send_status_to_server();
 	}
