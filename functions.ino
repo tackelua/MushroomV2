@@ -3,12 +3,12 @@ float humi;
 int light;
 bool water_high;
 bool water_low;
- 
+
 bool STT_PUMP_MIX = false;
-bool STT_PUMP_FLOOR = false; 
+bool STT_PUMP_FLOOR = false;
 bool STT_FAN_MIX = OFF;
 bool STT_FAN_WIND = OFF;
-bool STT_LIGHT = false; 
+bool STT_LIGHT = false;
 
 unsigned long t_pump_mix_change = -1;
 unsigned long t_pump_floor_change = -1;
@@ -17,7 +17,7 @@ unsigned long t_fan_wind_change = -1;
 unsigned long t_light_change = -1;
 
 bool pin_change = false;
-String CMD_ID = "         ";
+String CMD_ID = "";
 
 void send_message_to_stm32(String cmd);
 void stm32_digitalWrite(int pin, bool status);
@@ -25,44 +25,6 @@ String make_status_string_to_stm32();
 void send_status_to_server();
 
 #pragma region functions
-bool ledStt = false;
-bool smart_config() {
-	DEBUG.println(("SmartConfig started."));
-	unsigned long t = millis();
-	WiFi.beginSmartConfig();
-	while (1) {
-		ledStt = !ledStt;
-		digitalWrite(LED_BUILTIN, ledStt);
-		delay(200);
-		if (WiFi.smartConfigDone()) {
-			DEBUG.println(("SmartConfig: Success"));
-			DEBUG.print(("RSSI: "));
-			DEBUG.println(WiFi.RSSI());
-			WiFi.printDiag(Serial);
-			WiFi.stopSmartConfig();
-			break;
-		}
-		if ((millis() - t) > (5 * 60000)) {
-			DEBUG.println(("ESP restart"));
-			ESP.restart();
-			return false;
-		}
-	}
-
-	WiFi.reconnect();
-	if (WiFi.waitForConnectResult() == WL_CONNECTED)
-	{
-		DEBUG.println(("connected\n"));
-		DEBUG.print(("IP: "));
-		DEBUG.println(WiFi.localIP());
-		return true;
-	}
-	else {
-		DEBUG.println(("SmartConfig Fail\n"));
-	}
-	return false;
-}
-
 void wifi_init() {
 	WiFi.setAutoConnect(true);
 	WiFi.setAutoReconnect(true);
@@ -109,79 +71,6 @@ void wifi_loop() {
 }
 
 void libraries_init() {
-	/*
-	if (SPIFFS.begin()) {
-		Serial.println("mounted file system");
-		if (SPIFFS.exists(file_libConfigs)) {
-			//file exists, reading and loading
-			Serial.println("reading configs file");
-			File configFile = SPIFFS.open(file_libConfigs, "r");
-			if (configFile) {
-				Serial.println("opened config file");
-				size_t size = configFile.size();
-				// Allocate a buffer to store contents of the file.
-				std::unique_ptr<char[]> buf(new char[size]);
-
-				configFile.readBytes(buf.get(), size);
-				DynamicJsonBuffer jsonBuffer;
-				JsonObject& json = jsonBuffer.parseObject(buf.get());
-				json.printTo(Serial);
-				if (json.success()) {
-					Serial.println("\nparsed json");
-					String product = json["product"];
-					if (product != "ibizatv") {
-						Serial.println("config invalid");
-					}
-					//
-					//	char token[LENGTH];
-					//	char device[LENGTH];
-					//	char input1[LENGTH];
-					//	char input2[LENGTH];
-					//	char input3[LENGTH];
-					//	char analogIn[LENGTH];
-					//	char output1[LENGTH];
-					//	char output2[LENGTH];
-					//	char output3[LENGTH];
-					//
-					strcpy(token, json["token"]);
-					strcpy(device, json["device"]);
-					strcpy(input1, json["input1"]);
-					strcpy(input2, json["input2"]);
-					strcpy(input3, json["input3"]);
-					strcpy(analogIn, json["analogIn"]);
-					strcpy(output1, json["output1"]);
-					strcpy(output2, json["output2"]);
-					strcpy(output3, json["output3"]);
-
-					Serial.print("token: "); Serial.println(token);
-					Serial.print("device: "); Serial.println(device);
-					Serial.print("input1: "); Serial.println(input1);
-					Serial.print("input2: "); Serial.println(input2);
-					Serial.print("input3: "); Serial.println(input3);
-					Serial.print("analogIn: "); Serial.println(analogIn);
-					Serial.print("output1: "); Serial.println(output1);
-					Serial.print("output2: "); Serial.println(output2);
-					Serial.print("output3: "); Serial.println(output3);
-
-					return;
-				}
-				else {
-					Serial.println("failed to load json configs");
-				}
-			}
-			else {
-				Serial.println("Can not open configs file");
-			}
-		}
-		else {
-			Serial.println("Not found configs.json");
-		}
-	}
-	else {
-		Serial.println("failed to mount FS");
-	}
-	*/
-
 	SPIFFS.begin();
 	File libConfigs;
 	libConfigs = SPIFFS.open(file_libConfigs, "r");
@@ -729,7 +618,7 @@ void auto_control() {
 		control(PUMP_MIX, true, false);
 
 		DEBUG.println("AUTO FAN_MIX ON");
-		control(FAN_MIX, true,  false);
+		control(FAN_MIX, true, false);
 	}
 
 	if (pin_change) {
@@ -933,6 +822,7 @@ void control_handle(String _cmd) {
 			DEBUG.println(("Reset Wifi"));
 			WiFi.disconnect();
 		}
+		handle_Terminal(_cmd);
 	}
 }
 
@@ -947,10 +837,11 @@ float stm32_msg_get_params(String msg, String params) {
 	return data.toFloat();
 }
 void control_stm32_message(String msg) {
+	static bool STM32_PRE_STT_LIGHT = false;
 	static bool STM32_PRE_STT_PUMP_MIX = false;
 	static bool STM32_PRE_STT_PUMP_FLOOR = false;
-	static bool STM32_PRE_STT_FAN = false;
-	static bool STM32_PRE_STT_LIGHT = false;
+	static bool STM32_PRE_STT_FAN_MIX = false;
+	static bool STM32_PRE_STT_FAN_WIND = false;
 	msg.trim();
 	if (msg.startsWith("res:relay-status-all|HUB|")) {
 		String STT = msg.substring(String("res:relay-status-all|HUB|").length() - 1); //tính thứ tự relay từ 1
@@ -1000,6 +891,9 @@ void control_stm32_message(String msg) {
 		bool stt = STT[0];
 		switch (relay)
 		{
+		case LIGHT:
+			STT_LIGHT = stt;
+			break;
 		case PUMP_MIX:
 			STT_PUMP_MIX = stt;
 			break;
@@ -1009,8 +903,8 @@ void control_stm32_message(String msg) {
 		case FAN_MIX:
 			STT_FAN_MIX = stt;
 			break;
-		case LIGHT:
-			STT_LIGHT = stt;
+		case FAN_WIND:
+			STT_FAN_WIND = stt;
 			break;
 		default:
 			break;
@@ -1045,23 +939,27 @@ void control_stm32_message(String msg) {
 		send_time_to_stm32();
 	}
 
+	if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
+		create_logs("Light", STT_LIGHT, flag_isCommandFromApp);
+	}
 	if (STT_PUMP_MIX != STM32_PRE_STT_PUMP_MIX) {
 		create_logs("Pump_Mix", STT_PUMP_MIX, flag_isCommandFromApp);
 	}
 	if (STT_PUMP_FLOOR != STM32_PRE_STT_PUMP_FLOOR) {
-		create_logs("Pump_Floor", STT_PUMP_MIX, flag_isCommandFromApp);
+		create_logs("Pump_Floor", STT_PUMP_FLOOR, flag_isCommandFromApp);
 	}
-	if (STT_FAN_MIX != STM32_PRE_STT_FAN) {
-		create_logs("Fan", STT_PUMP_MIX, flag_isCommandFromApp);
+	if (STT_FAN_MIX != STM32_PRE_STT_FAN_MIX) {
+		create_logs("Fan_Mix", STT_FAN_MIX, flag_isCommandFromApp);
 	}
-	if (STT_LIGHT != STM32_PRE_STT_LIGHT) {
-		create_logs("Light", STT_PUMP_MIX, flag_isCommandFromApp);
+	if (STT_FAN_WIND != STM32_PRE_STT_FAN_WIND) {
+		create_logs("Fan_Wind", STT_FAN_WIND, flag_isCommandFromApp);
 	}
 
+	STM32_PRE_STT_LIGHT = STT_LIGHT;
 	STM32_PRE_STT_PUMP_MIX = STT_PUMP_MIX;
 	STM32_PRE_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
-	STM32_PRE_STT_FAN = STT_FAN_MIX;
-	STM32_PRE_STT_LIGHT = STT_LIGHT;
+	STM32_PRE_STT_FAN_MIX = STT_FAN_MIX;
+	STM32_PRE_STT_FAN_WIND = STT_FAN_WIND;
 }
 
 //void serial_command_handle() {

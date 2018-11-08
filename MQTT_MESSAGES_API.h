@@ -1,7 +1,7 @@
 ﻿#define IGNORE_THIS_FILE
 #ifndef IGNORE_THIS_FILE
 
-VERSION 0.1.2
+VERSION 0.1.3
 
 CONTROL
 APP -> HUB
@@ -12,10 +12,10 @@ Topic : "Mushroom/Commands/REQUEST/<HubID>"
 		//"SOURCE" : "",		//"APP" (APP Client) or "HUB"
 		//"DEST" : "",			//"APP" (APP Client) or "HUB"
 		//"TIMESTAMP" : "",		//option
-		"MIST" : "OFF",			//"ON" or "OFF"
-		"LIGHT" : "ON",			//"ON" or "OFF"
-		"FAN" : "ON",			//"ON" or "OFF"
-		//"VALIDATE" : ""		//validate the command (optional), cần bảo mật thì tính sau
+		"MIST" : "",			//"on" or "off"
+		"LIGHT" : "",			//"on" or "off"
+		"FAN" : "",				//"on" or "off"
+		//"VALIDATE" : ""		//(optional) validate the command, cần bảo mật thì tính sau
 	}
 HUB -> APP
 Topic : "Mushroom/Commands/RESPONSE/<HubID>"
@@ -25,10 +25,10 @@ Topic : "Mushroom/Commands/RESPONSE/<HubID>"
 		//"SOURCE" : "",		
 		//"DEST" : "",		
 		"TIMESTAMP" : long,
-		"TYPE" : "",			//"RESPONSE" nghĩa là app điều khiển, "NOTIFY" : HUB tự điều khiển theo chế độ tự động
-		"MIST" : "OFF",		
-		"LIGHT" : "ON",		
-		"FAN" : "ON",		
+		"TYPE" : "",			//"RESPONSE" nghĩa là APP điều khiển, "NOTIFY" : HUB tự điều khiển theo chế độ tự động
+		"MIST" : "",		
+		"LIGHT" : "",		
+		"FAN" : "",		
 		//"VALIDATE" : ""			
 	}
 
@@ -67,11 +67,21 @@ Topic: "Mushroom/Status/<HubID>"
 	{
 		"HUB_ID" : "",
 		"STATUS" : "",				//"ONLINE" (HUB send) or "OFFLINE" (BROKER send LWT)
-		"FW_VER" : ""				//only available when online
+		"FW_VER" : "",				//only available when online
+		"HW_VER" : "",				//only available when online
 		"WIFI" : "",				//only available when online
 		"SIGNAL" : int				//only available when online
 	}
 
+
+LOGS
+Topic: "Mushroom/Logs/<HubID>"
+	{
+		"HUB_ID" : "",
+		"Content" : "",				//"Light" or "Pump_Mix" or "Pump_Floor" or "Fan_Mix" or "Fan_Wind" + " on" or " off"
+		"From" : ""					//"APP" or "HUB"
+		"Timestamp" : "",			
+	}
 
 //=======================================
 
@@ -87,8 +97,8 @@ Topic: "Mushroom/Terminal"
 Topic: "Mushroom/Terminal/<HubID>"
 	"/restart"
 	"/uf"
-	"/get version"
-	"/get library"
+	"/version" or "/v"
+	"/library" or "/l"
 
 
 #endif

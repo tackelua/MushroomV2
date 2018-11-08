@@ -19,10 +19,12 @@
 #include "hardware.h"
 #include "mqtt_helper.h"
 #include <FS.h>
+#include <EEPROM.h>
 
 
-#define __VERSION__	"3.1.3c only for 17C80"
+#define __VERSION__	"3.1.4"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
+String _hardwareVersion;
 
 
 bool flag_schedule_pump_floor = false;
@@ -32,16 +34,51 @@ bool flag_SmartConfig = false;
 
 void updateTimeStamp(unsigned long interval);
 void control(int pin, bool status, bool isCommandFromApp);
+
+const int id_eeprom_addr = 0;
 String getID() {
+	EEPROM.begin(50);
+	String _id; 
+	for (byte i = 0; i < 50; i++) {
+		char c = EEPROM.read(id_eeprom_addr + i);
+		_id += c; 
+		if (c == '.') {
+			break;
+		}
+	}
+	_id.trim();
+
+	if (_id.charAt(_id.length() - 1) != '.') {
+		_id = setID();
+	}
+	else {
+		_id = _id.substring(0, _id.length() - 1);
+	} 
+	return _id;
+}
+String setID() { 
+	String _id;
 	byte mac[6];
 	WiFi.macAddress(mac);
-	String id;
 	for (int i = 0; i < 6; i++)
 	{
-		id += mac[i] < 10 ? "0" + String(mac[i], HEX) : String(mac[i], HEX);
+		_id += mac[i] < 10 ? "0" + String(mac[i], HEX) : String(mac[i], HEX);
 	}
-	id.toUpperCase();
-	return id.substring(id.length() - 6);
+	_id = _id.substring(_id.length() - 6);
+	_id.trim();
+	_id.toUpperCase();
+	return setID(_id);
+}
+String setID(String id) { 
+	String _id = id;
+	_id.trim();
+	_id += ".";
+	_id.toUpperCase();  
+	for (byte i = 0; i < _id.length(); i++) {
+		EEPROM.write(id_eeprom_addr + i, _id[i]); 
+	}
+	EEPROM.commit();
+	return _id.substring(0, _id.length() - 1);
 }
 String HubID;// = getID();
 
@@ -58,7 +95,7 @@ void setup()
 	DEBUG.print(("\r\nFirmware Version: "));
 	DEBUG.println(_firmwareVersion);
 
-	HubID = "17C80"; // getID();
+	HubID = getID();
 	DEBUG.print(("\r\nHubID: "));
 	DEBUG.println(HubID);
 	DEBUG.println();
