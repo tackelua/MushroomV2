@@ -44,7 +44,7 @@ Topic : "Mushroom/Library/<HubID>"
 		"LIGHT_MAX": int,
 		"LIGHT_MIN": int,
 		"DATE_HAVERST_PHASE": long,
-		"SENSOR_UPDATE_INTERVAL" : long
+		"SENSOR_UPDATE_INTERVAL_LIB" : long
 		"LIBRARY": ""						//"ENABLE" for AUTOMATIC or "DISABLE"
 	}
 

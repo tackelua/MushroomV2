@@ -33,8 +33,12 @@ const String off_ = "off";
 
 int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
 long DATE_HAVERST_PHASE;
-long SENSOR_UPDATE_INTERVAL = 30000;
+long SENSOR_UPDATE_INTERVAL_LIB = 30000;
 bool library = false;
+
+volatile long SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_LIB;
+bool skip_update_sensor_after_control = false;
+time_t t_skip_update_sensor_after_control;
 
 extern String timeStr;
 extern bool STT_PUMP_MIX, STT_FAN_MIX, STT_LIGHT;
@@ -120,6 +124,9 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 		control(FAN_WIND, false, isCommandFromApp);
 	}
 
+	SENSOR_UPDATE_INTERVAL = 2000;
+	skip_update_sensor_after_control = true;
+	t_skip_update_sensor_after_control = millis();
 	if (pin_change) {
 		send_control_message_all_to_stm32();
 	}
@@ -159,7 +166,7 @@ void handleTopic__Mushroom_Library_HubID(String mqtt_Message, bool save) {
 
 	long interval = lib["SENSOR_UPDATE_INTERVAL"].as<long>();
 	if (interval > 0) {
-		SENSOR_UPDATE_INTERVAL = interval;
+		SENSOR_UPDATE_INTERVAL_LIB = interval;
 	}
 
 	String LIBRARY = lib["LIBRARY"].asString();
@@ -177,7 +184,7 @@ void handleTopic__Mushroom_Library_HubID(String mqtt_Message, bool save) {
 	DEBUG.println("LIGHT_MAX : " + String(LIGHT_MAX));
 	DEBUG.println("LIGHT_MIN : " + String(LIGHT_MIN));
 	DEBUG.println("DATE_HAVERST_PHASE : " + String(DATE_HAVERST_PHASE));
-	DEBUG.println("SENSOR_UPDATE_INTERVAL : " + String(SENSOR_UPDATE_INTERVAL));
+	DEBUG.println("SENSOR_UPDATE_INTERVAL : " + String(SENSOR_UPDATE_INTERVAL_LIB));
 	DEBUG.println("LIBRARY : " + LIBRARY);
 	DEBUG.println("\r\n");
 }
@@ -224,9 +231,14 @@ void handle_Terminal(String msg) {
 		jsLib["HUMI_MIN"] = HUMI_MIN;
 		jsLib["LIGHT_MAX"] = LIGHT_MAX;
 		jsLib["LIGHT_MIN"] = LIGHT_MIN;
+		String LIB = library ? "ENABLE" : "DISABLE";;
+		jsLib["DATE_HAVERST_PHASE"] = DATE_HAVERST_PHASE;
+		jsLib["SENSOR_UPDATE_INTERVAL"] = SENSOR_UPDATE_INTERVAL;
+		jsLib["SENSOR_UPDATE_INTERVAL_LIB"] = SENSOR_UPDATE_INTERVAL_LIB;
+		jsLib["LIBRARY"] = LIB;
 
 		String libs;
-		libs.reserve(100);
+		libs.reserve(500);
 		jsLib.printTo(libs);
 		mqtt_publish("Mushroom/Terminal/RESPONSE/" + HubID, libs);
 	}

@@ -22,7 +22,7 @@
 #include <EEPROM.h>
 
 
-#define __VERSION__	"3.1.4"
+#define __VERSION__	"3.1.5"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 String _hardwareVersion;
 
@@ -119,6 +119,6 @@ void loop()
 	mqtt_loop();
 	stm32_command_handle();
 	auto_control();
-	get_data_sensor(SENSOR_UPDATE_INTERVAL);
+	get_data_sensor();
 	//Blynk.run();
 }

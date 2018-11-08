@@ -991,13 +991,25 @@ void stm32_command_handle() {
 	yield();
 }
 
-void get_data_sensor(unsigned long interval) {
+void get_data_sensor() {
 	static unsigned long t = -1;
-	if (millis() - t > interval) {
-		t = millis();
-		send_message_to_stm32("cmd:get-sensor-all|HUB");
+	if (skip_update_sensor_after_control && millis() - t_skip_update_sensor_after_control < 2000) {
+		return;
+	}
+	else {
+		skip_update_sensor_after_control = false;
 	}
 
+	if (millis() - t > SENSOR_UPDATE_INTERVAL) {
+		t = millis();
+		send_message_to_stm32("cmd:get-sensor-all|HUB");
+		if (SENSOR_UPDATE_INTERVAL != SENSOR_UPDATE_INTERVAL_LIB) {
+			SENSOR_UPDATE_INTERVAL += 1000;
+			if (SENSOR_UPDATE_INTERVAL > SENSOR_UPDATE_INTERVAL_LIB) {
+				SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_LIB;
+			}
+		}
+	}
 }
 void set_hub_id_to_stm32(String id) {
 	send_message_to_stm32("cmd:set-hub-id|" + id);
