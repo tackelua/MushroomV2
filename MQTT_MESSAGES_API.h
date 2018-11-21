@@ -44,21 +44,33 @@ Topic : "Mushroom/Library/<HubID>"
 		"LIGHT_MAX": int,
 		"LIGHT_MIN": int,
 		"DATE_HAVERST_PHASE": long,
-		"SENSOR_UPDATE_INTERVAL_LIB" : long
+		"SENSOR_UPDATE_INTERVAL_DEFAULT" : long
 		"LIBRARY": ""						//"ENABLE" for AUTOMATIC or "DISABLE"
 	}
+
+AUTO OFF
+Topic :
+	"Mushroom/<HubID>/AUTO_OFF/LIGHT"
+	"Mushroom/<HubID>/AUTO_OFF/PUMP_MIX"
+	"Mushroom/<HubID>/AUTO_OFF/PUMP_FLOOR"
+	"Mushroom/<HubID>/AUTO_OFF/FAN_MIX"
+	"Mushroom/<HubID>/AUTO_OFF/FAN_WIND"
+
+Value: <int> milliseconds
 
 
 SENSOR
 HUB -> APP
 Topic: "Mushroom/Sensor/<HubID>"
 	{  
+		"MES_ID":"",
 		"HUB_ID":"",
 		"TEMP":int,
 		"HUMI":int,
 		"LIGHT":int,
 		"WATER_EMPTY":"",			// "YES" or "NO"
-		"RSSI":int
+		"RSSI":int,
+		"TIMESTAMP": long
 	}
 
 
@@ -86,7 +98,7 @@ Topic: "Mushroom/Logs/<HubID>"
 //=======================================
 
 TERMINAL
-Topic: "Mushroom/Terminal"
+Topic: tp_Terminal
 	{
 		"Command" : "FOTA",
 		"Hub_ID" : "all",

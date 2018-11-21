@@ -1,5 +1,4 @@
-﻿#define CUSTOM_INIT_PINS
-#define D3_OUTPUT_HIGH
+﻿#define MQTT_MAX_PACKET_SIZE 1024
 
 #include <SoftwareSerial.h>
 #include <DNSServer.h>
@@ -12,17 +11,15 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiManager.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.hpp>
 #include <ArduinoJson.h>
 //#define BLYNK_PRINT Serial
 //#include <BlynkSimpleEsp8266.h>
-#include "hardware.h"
-#include "mqtt_helper.h"
 #include <FS.h>
 #include <EEPROM.h>
+#include "hardware.h"
+#include "mqtt_helper.h"
 
-
-#define __VERSION__	"3.1.5"
+#define __VERSION__	"3.1.6beta"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 String _hardwareVersion;
 

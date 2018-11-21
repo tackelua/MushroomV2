@@ -193,9 +193,12 @@ void update_sensor(unsigned long interval) {
 	static unsigned long t = -1;
 	if (interval == 0 || millis() - t >= interval) {
 		t = millis();
-
+		
+		static unsigned long mes_id = 1;
 		StaticJsonBuffer<500> jsBuffer;
 		JsonObject& jsData = jsBuffer.createObject();
+
+		jsData["MES_ID"] = "SS-" + String(mes_id++);
 		jsData["HUB_ID"] = HubID;
 		jsData["TEMP"] = (abs(temp) > 200.0 ? -1 : (int)temp);
 		jsData["HUMI"] = (abs(humi) > 200.0 ? -1 : (int)humi);
@@ -213,6 +216,8 @@ void update_sensor(unsigned long interval) {
 		else
 			quality = 2 * (dBm + 100);
 		jsData["RSSI"] = quality;
+
+		jsData["TIMESTAMP"] = now();
 
 		String data;
 		data.reserve(120);
@@ -316,7 +321,7 @@ void send_status_to_server() {
 	String jsStatusStr;
 	jsStatusStr.reserve(150);
 	jsStatus.printTo(jsStatusStr);
-	mqtt_publish("Mushroom/Commands/RESPONSE/" + HubID, jsStatusStr, true);
+	mqtt_publish(tp_Response, jsStatusStr, true);
 
 	//Blynk.virtualWrite(BL_PUMP_MIX, STT_PUMP_MIX);
 	//Blynk.virtualWrite(BL_FAN, STT_FAN_MIX);
@@ -448,11 +453,18 @@ bool skip_auto_pump_mix = false;
 bool skip_auto_fan_mix = false;
 bool skip_auto_fan_wind = false;
 
+time_t AUTO_OFF_LIGHT = 60 * 1000 * SECS_PER_MIN; //60 phút
+time_t AUTO_OFF_PUMP_MIX = 6 * 60 * 1000;//180s
+time_t AUTO_OFF_PUMP_FLOOR = 90000;//90s
+time_t AUTO_OFF_FAN_MIX = AUTO_OFF_PUMP_MIX + 5;
+time_t AUTO_OFF_FAN_WIND = 10 * 1000 * SECS_PER_MIN;//10 phút
+
+
 void auto_control() {
 	//https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
 	//https://prnt.sc/j2oxmu https://snag.gy/6E7xhU.jpg
 
-	//auto trở lại sau khi điều khiển 5 phút
+	//auto trở lại sau khi điều khiển 1 phút
 	unsigned long t_auto_return = 1 * 60000;
 	if (skip_auto_light && (millis() - t_light_change) > t_auto_return) {
 		skip_auto_light = false;
@@ -469,7 +481,7 @@ void auto_control() {
 	//==============================================================
 
 	//+ LIGHT tự tắt sau 60 phút
-	if ((millis() - t_light_change) > (60 * 1000 * SECS_PER_MIN)) {
+	if ((millis() - t_light_change) > AUTO_OFF_LIGHT) {
 		skip_auto_light = false;
 		if (STT_LIGHT) {
 			DEBUG.println("AUTO LIGHT OFF");
@@ -480,7 +492,7 @@ void auto_control() {
 	bool pump_floor_on = false;
 	//+ PUMP_MIX tự tắt sau 180s sau đó bật PUMP_FLOOR
 	if (hour() >= 11 && hour() < 15) {
-		if ((millis() - t_pump_mix_change) > (6 * 60 * 1000)) {
+		if ((millis() - t_pump_mix_change) > AUTO_OFF_PUMP_MIX) {
 			skip_auto_pump_mix = false;
 			if (STT_PUMP_MIX) {
 				DEBUG.println("AUTO PUMP_MIX OFF");
@@ -492,7 +504,7 @@ void auto_control() {
 			}
 		}
 	}
-	else if ((millis() - t_pump_mix_change) > (180 * 1000)) {
+	else if ((millis() - t_pump_mix_change) > AUTO_OFF_PUMP_MIX) {
 		skip_auto_pump_mix = false;
 		if (STT_PUMP_MIX) {
 			DEBUG.println("AUTO PUMP_MIX OFF");
@@ -509,7 +521,7 @@ void auto_control() {
 		control(PUMP_FLOOR, true, false);
 	}
 	//+ PUMP_FLOOR tự tắt sau 90s
-	if ((millis() - t_pump_floor_change) > 90000) {
+	if ((millis() - t_pump_floor_change) > AUTO_OFF_PUMP_FLOOR) {
 		if (STT_PUMP_FLOOR) {
 			DEBUG.println("AUTO PUMP_FLOOR OFF");
 			control(PUMP_FLOOR, false, false);
@@ -517,7 +529,7 @@ void auto_control() {
 	}
 	//+ FAN_MIX tự tắt sau 185s
 	if (hour() >= 11 && hour() < 15) {
-		if ((millis() - t_fan_mix_change) > (6 * 60 * 1000) + 5) {
+		if ((millis() - t_fan_mix_change) > AUTO_OFF_FAN_MIX) {
 			skip_auto_fan_mix = false;
 			if (STT_FAN_MIX) {
 				DEBUG.println("AUTO FAN_MIX OFF");
@@ -525,7 +537,7 @@ void auto_control() {
 			}
 		}
 	}
-	else if ((millis() - t_fan_mix_change) > 185000) {
+	else if ((millis() - t_fan_mix_change) > AUTO_OFF_FAN_MIX) {
 		skip_auto_fan_mix = false;
 		if (STT_FAN_MIX) {
 			DEBUG.println("AUTO FAN_MIX OFF");
@@ -533,7 +545,7 @@ void auto_control() {
 		}
 	}
 	//+ FAN_WIND tự tắt sau 10 phút
-	if ((millis() - t_fan_wind_change) > (10 * 1000 * SECS_PER_MIN)) {
+	if ((millis() - t_fan_wind_change) > AUTO_OFF_FAN_WIND) {
 		skip_auto_fan_wind = false;
 		if (STT_FAN_WIND) {
 			DEBUG.println("AUTO FAN_WIND OFF");
@@ -1003,10 +1015,10 @@ void get_data_sensor() {
 	if (millis() - t > SENSOR_UPDATE_INTERVAL) {
 		t = millis();
 		send_message_to_stm32("cmd:get-sensor-all|HUB");
-		if (SENSOR_UPDATE_INTERVAL != SENSOR_UPDATE_INTERVAL_LIB) {
+		if (SENSOR_UPDATE_INTERVAL != SENSOR_UPDATE_INTERVAL_DEFAULT) {
 			SENSOR_UPDATE_INTERVAL += 1000;
-			if (SENSOR_UPDATE_INTERVAL > SENSOR_UPDATE_INTERVAL_LIB) {
-				SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_LIB;
+			if (SENSOR_UPDATE_INTERVAL > SENSOR_UPDATE_INTERVAL_DEFAULT) {
+				SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_DEFAULT;
 			}
 		}
 	}
@@ -1014,6 +1026,7 @@ void get_data_sensor() {
 void set_hub_id_to_stm32(String id) {
 	send_message_to_stm32("cmd:set-hub-id|" + id);
 }
+
 #pragma endregion
 
 

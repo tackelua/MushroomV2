@@ -37,6 +37,9 @@
     <ClInclude Include="MQTT_MESSAGES_API.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="__vm\.mushroom 3.1.5.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mqtt_helper.cpp">
