@@ -14,7 +14,7 @@ extern long SENSOR_UPDATE_INTERVAL_DEFAULT;
 extern bool LIBRARY;
 extern volatile long SENSOR_UPDATE_INTERVAL;
 extern bool skip_update_sensor_after_control;
-extern time_t t_skip_update_sensor_after_control;
+extern unsigned long t_skip_update_sensor_after_control;
 
 extern String mqtt_Message;
 extern const String on_;

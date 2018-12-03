@@ -23,11 +23,11 @@ extern bool skip_auto_light;
 extern bool skip_auto_fan_mix;
 extern bool skip_auto_fan_wind;
 
-extern time_t AUTO_OFF_LIGHT;
-extern time_t AUTO_OFF_PUMP_MIX;
-extern time_t AUTO_OFF_PUMP_FLOOR;
-extern time_t AUTO_OFF_FAN_MIX;
-extern time_t AUTO_OFF_FAN_WIND;
+extern unsigned long AUTO_OFF_LIGHT;
+extern unsigned long AUTO_OFF_PUMP_MIX;
+extern unsigned long AUTO_OFF_PUMP_FLOOR;
+extern unsigned long AUTO_OFF_FAN_MIX;
+extern unsigned long AUTO_OFF_FAN_WIND;
 
 const char* file_libConfigs = "/configs.json";
 
@@ -61,7 +61,7 @@ bool LIBRARY = true;
 
 volatile long SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_DEFAULT;
 bool skip_update_sensor_after_control = false;
-time_t t_skip_update_sensor_after_control;
+unsigned long t_skip_update_sensor_after_control;
 
 String mqtt_Message;
 

@@ -4,17 +4,26 @@ int LIGHT;
 bool WATER_HIGH;
 bool WATER_LOW;
 
+//current status from stm
 bool STT_PUMP_MIX = OFF;
 bool STT_PUMP_FLOOR = OFF;
 bool STT_FAN_MIX = OFF;
 bool STT_FAN_WIND = OFF;
 bool STT_LIGHT = OFF;
 
-unsigned long t_pump_mix_change = -1;
-unsigned long t_pump_floor_change = -1;
-unsigned long t_fan_mix_change = -1;
-unsigned long t_fan_wind_change = -1;
-unsigned long t_light_change = -1;
+//status is set to send to stm
+bool SET_STT_PUMP_MIX = OFF;
+bool SET_STT_PUMP_FLOOR = OFF;
+bool SET_STT_FAN_MIX = OFF;
+bool SET_STT_FAN_WIND = OFF;
+bool SET_STT_LIGHT = OFF;
+
+
+unsigned long t_pump_mix_change = 999999999UL;
+unsigned long t_pump_floor_change = 999999999UL;
+unsigned long t_fan_mix_change = 999999999UL;
+unsigned long t_fan_wind_change = 999999999UL;
+unsigned long t_light_change = 999999999UL;
 
 bool pin_change = false;
 String CMD_ID = "";
@@ -172,7 +181,7 @@ void updateTimeStamp(unsigned long interval = 0) {
 		DynamicJsonBuffer timestamp(500);
 		JsonObject& jsTimeStamp = timestamp.parseObject(strTimeStamp);
 		if (jsTimeStamp.success()) {
-			time_t ts = String(jsTimeStamp["UNIX_TIME"].asString()).toInt();
+			unsigned long ts = String(jsTimeStamp["UNIX_TIME"].asString()).toInt();
 			if (ts > 1000000000) {
 				t_pre_update = millis();
 				wasSync = true;
@@ -267,14 +276,14 @@ void control(int pin, bool status, bool isCommandFromApp) { //status = true -> O
 	yield();
 	if ((pin == R_PUMP_FLOOR) && (STT_PUMP_FLOOR != status)) {
 		t_pump_floor_change = millis();
-		STT_PUMP_FLOOR = status;
+		SET_STT_PUMP_FLOOR = status;
 		pin_change = true;
 		DEBUG.print(("PUMP_FLOOR: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == R_PUMP_MIX) && (STT_PUMP_MIX != status)) {
 		t_pump_mix_change = millis();
-		STT_PUMP_MIX = status;
+		SET_STT_PUMP_MIX = status;
 		pin_change = true;
 		DEBUG.print(("PUMP: "));
 		DEBUG.println(status ? "ON" : "OFF");
@@ -284,21 +293,21 @@ void control(int pin, bool status, bool isCommandFromApp) { //status = true -> O
 	}
 	if ((pin == R_FAN_MIX) && (STT_FAN_MIX != status)) {
 		t_fan_mix_change = millis();
-		STT_FAN_MIX = status;
+		SET_STT_FAN_MIX = status;
 		pin_change = true;
 		DEBUG.print(("FAN_MIX: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == R_FAN_WIND) && (STT_FAN_WIND != status)) {
 		t_fan_wind_change = millis();
-		STT_FAN_WIND = status;
+		SET_STT_FAN_WIND = status;
 		pin_change = true;
 		DEBUG.print(("FAN_WIND: "));
 		DEBUG.println(status ? "ON" : "OFF");
 	}
 	if ((pin == R_LIGHT) && (STT_LIGHT != status)) {
 		t_light_change = millis();
-		STT_LIGHT = status;
+		SET_STT_LIGHT = status;
 		pin_change = true;
 		DEBUG.print(("LIGHT: "));
 		DEBUG.println(status ? "ON" : "OFF");
@@ -340,7 +349,7 @@ void send_status_to_server() {
 
 String make_status_string_to_stm32() {
 	//PUMP1 - PUMP2 - FAN_MIX - LIGHT - WATER_IN
-	String s = String(STT_LIGHT) + String(STT_PUMP_MIX) + String(STT_PUMP_FLOOR) + String(STT_FAN_MIX) + String(STT_FAN_WIND);
+	String s = String(SET_STT_LIGHT) + String(SET_STT_PUMP_MIX) + String(SET_STT_PUMP_FLOOR) + String(SET_STT_FAN_MIX) + String(SET_STT_FAN_WIND);
 	return s;
 }
 
@@ -384,11 +393,11 @@ void send_time_to_stm32() {
 //bool skip_auto_fan_mix = false;
 //bool skip_auto_fan_wind = false;
 //
-//time_t AUTO_OFF_LIGHT = 60 * 1000 * SECS_PER_MIN; //60 phút
-//time_t AUTO_OFF_PUMP_MIX = 6 * 60 * 1000;//180s
-//time_t AUTO_OFF_PUMP_FLOOR = 90000;//90s
-//time_t AUTO_OFF_FAN_MIX = AUTO_OFF_PUMP_MIX + 5;
-//time_t AUTO_OFF_FAN_WIND = 10 * 1000 * SECS_PER_MIN;//10 phút
+//unsigned long AUTO_OFF_LIGHT = 60 * 1000 * SECS_PER_MIN; //60 phút
+//unsigned long AUTO_OFF_PUMP_MIX = 6 * 60 * 1000;//180s
+//unsigned long AUTO_OFF_PUMP_FLOOR = 90000;//90s
+//unsigned long AUTO_OFF_FAN_MIX = AUTO_OFF_PUMP_MIX + 5;
+//unsigned long AUTO_OFF_FAN_WIND = 10 * 1000 * SECS_PER_MIN;//10 phút
 //
 //
 //void auto_control() {
@@ -691,6 +700,12 @@ void control_stm32_message(String msg) {
 			STT_FAN_WIND = false;
 		}
 		send_status_to_server();
+
+		SET_STT_PUMP_MIX = STT_PUMP_MIX;
+		SET_STT_PUMP_FLOOR = STT_PUMP_FLOOR;
+		SET_STT_FAN_MIX = STT_FAN_MIX;
+		SET_STT_FAN_WIND = STT_FAN_WIND;
+		SET_STT_LIGHT = STT_LIGHT;
 	}
 	else if (msg.startsWith("res:relay-status|HUB|")) {
 		String RL = msg.substring(String("res:relay-status|HUB|").length());
@@ -788,7 +803,7 @@ void control_stm32_message(String msg) {
 void stm32_command_handle() {
 	if (STM32.available()) {
 		digitalWrite(LED_BUILTIN, ON);
-		String Scmd = STM32.readString();
+		String Scmd = STM32.readStringUntil('\n');
 		Scmd.trim();
 		DEBUG.println(("\r\nSTM32>>>"));
 		DEBUG.println(Scmd);

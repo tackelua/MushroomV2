@@ -10,6 +10,12 @@ extern bool STT_FAN_MIX;
 extern bool STT_FAN_WIND;
 extern bool STT_LIGHT;
 
+extern bool SET_STT_PUMP_MIX;
+extern bool SET_STT_PUMP_FLOOR;
+extern bool SET_STT_FAN_MIX;
+extern bool SET_STT_FAN_WIND;
+extern bool SET_STT_LIGHT;
+
 extern unsigned long t_pump_mix_change;
 extern unsigned long t_pump_floor_change;
 extern unsigned long t_fan_mix_change;
@@ -24,13 +30,13 @@ bool skip_auto_pump_mix = false;
 bool skip_auto_fan_mix = false;
 bool skip_auto_fan_wind = false;
 
-time_t AUTO_OFF_LIGHT = 60 * 1000 * SECS_PER_MIN; //60 phút
-time_t AUTO_OFF_PUMP_MIX = 6 * 60 * 1000;//180s
-time_t AUTO_OFF_PUMP_FLOOR = 90000;//90s
-time_t AUTO_OFF_FAN_MIX = AUTO_OFF_PUMP_MIX + 5;
-time_t AUTO_OFF_FAN_WIND = 10 * 1000 * SECS_PER_MIN;//10 phút
+unsigned long AUTO_OFF_LIGHT = 60 * 1000 * SECS_PER_MIN; //60 phút
+unsigned long AUTO_OFF_PUMP_MIX = 6 * 60 * 1000;//180s
+unsigned long AUTO_OFF_PUMP_FLOOR = 90000;//90s
+unsigned long AUTO_OFF_FAN_MIX = AUTO_OFF_PUMP_MIX + 5;
+unsigned long AUTO_OFF_FAN_WIND = 10 * 1000 * SECS_PER_MIN;//10 phút
 
-time_t DELAY_SEND_CMD_STM32 = 1000;
+unsigned long DELAY_SEND_CMD_STM32 = 1000;
 
 void auto_return_automation() {
 	//auto trở lại sau khi điều khiển 1 phút
@@ -51,7 +57,7 @@ void auto_return_automation() {
 
 void auto_off_light() {
 	if (!skip_auto_light && STT_LIGHT && LIGHT > LIGHT_MAX) {
-		static time_t t = millis();
+		static unsigned long t = millis();
 		if (millis() - t < DELAY_SEND_CMD_STM32) {
 			return;
 		}
@@ -61,8 +67,8 @@ void auto_off_light() {
 	}
 }
 void auto_off_pump_mix() {
-	if (!skip_auto_pump_mix && STT_PUMP_MIX && (HUMI > HUMI_MIN || TEMP < TEMP_MAX)) {
-		static time_t t = millis();
+	if (!skip_auto_pump_mix && STT_PUMP_MIX && (HUMI > HUMI_MIN && TEMP < TEMP_MAX)) {
+		static unsigned long t = millis();
 		if (millis() - t < DELAY_SEND_CMD_STM32) {
 			return;
 		}
@@ -86,7 +92,7 @@ void auto_off_fan_mix() {
 }
 void auto_off_fan_wind() {
 	if (!skip_auto_fan_wind && STT_FAN_WIND && (TEMP < TEMP_MAX && HUMI < HUMI_MAX)) {
-		static time_t t = millis();
+		static unsigned long t = millis();
 		if (millis() - t < DELAY_SEND_CMD_STM32) {
 			return;
 		}
@@ -137,15 +143,15 @@ void auto_on() {
 	if (!LIBRARY) {
 		return;
 	}
-	static time_t t = millis();
+	static unsigned long t = millis();
 	if (millis() - t < DELAY_SEND_CMD_STM32) {
 		return;
 	}
 	t = millis();
 
 	if (TEMP > TEMP_MAX || HUMI < HUMI_MIN) {
-		time_t _30mins = 30 * 1000 * SECS_PER_MIN;
-		time_t t_delay = millis() - t_pump_mix_change;
+		unsigned long _30mins = 30 * 1000 * SECS_PER_MIN;
+		unsigned long t_delay = millis() - t_pump_mix_change;
 		if (t_delay > _30mins) { /*30 phút*/
 			control(R_PUMP_MIX, ON, false);
 			control(R_FAN_MIX, ON, false);
@@ -160,14 +166,16 @@ void auto_on() {
 			flag_schedule_pump_floor = true;
 		}
 		else {
-			control(R_PUMP_FLOOR, ON, false);
+			if (STT_FAN_MIX == OFF) {
+				control(R_PUMP_FLOOR, ON, false);
+			}
 
-			time_t t_delay_fan_wind = millis() - t_fan_wind_change;
+			unsigned long t_delay_fan_wind = millis() - t_fan_wind_change;
 			if (t_delay_fan_wind > _30mins) {
 				control(R_FAN_WIND, ON, false);
 			}
 
-			if (STT_PUMP_FLOOR == OFF) {
+			if (STT_PUMP_FLOOR == OFF && STT_FAN_MIX == OFF) {
 				DEBUG_println("4.1c AUTO PUMP_FLOOR ON");
 			}
 
@@ -184,7 +192,7 @@ void auto_on() {
 	}
 
 	if (TEMP > TEMP_MAX && HUMI > HUMI_MAX) {
-		time_t t_delay = millis() - t_fan_wind_change;
+		unsigned long t_delay = millis() - t_fan_wind_change;
 		if (t_delay > 20 * 1000 * SECS_PER_MIN) {
 			control(R_FAN_MIX, ON, false);
 			control(R_FAN_WIND, ON, false);
@@ -205,7 +213,7 @@ void auto_on() {
 	}
 
 	if (LIGHT < LIGHT_MIN && hour() > 6 && hour() < 18) {
-		time_t t_delay = millis() - t_light_change;
+		unsigned long t_delay = millis() - t_light_change;
 		if (t_delay > 10 * 1000 * SECS_PER_MIN) {
 			control(R_LIGHT, ON, false);
 			if (STT_LIGHT == OFF) {

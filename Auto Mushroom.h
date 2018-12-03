@@ -1,7 +1,8 @@
 ﻿#define IGNORE_AUTOMATION
 #ifndef IGNORE_AUTOMATION
 
-VERSION = 181128-1
+//YYMMDD
+VERSION = 181203-1
 
 https://docs.google.com/document/d/1svQLMZP1yxSOVfA69VlzfAsRBd0GcIfdrHD7v6-GutA/edit
 
@@ -95,7 +96,8 @@ Trong chế độ AUTO
 	
 	c/ Nếu thời gian delay PUMP_MIX tối thiểu < 30 phút
 		=>
-		PUMP_FLOOR ON 
+		
+		PUMP_FLOOR ON IF PUMP_MIX OFF
 		và
 		Nếu thời gian delay FAN_WIND > 30 phút
 		=>
