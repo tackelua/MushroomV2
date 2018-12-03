@@ -30,6 +30,7 @@ extern time_t AUTO_OFF_FAN_MIX;
 extern time_t AUTO_OFF_FAN_WIND;
 
 const char* file_libConfigs = "/configs.json";
+
 const char* mqtt_server = "mic.duytan.edu.vn";
 const char* mqtt_user = "Mic@DTU2017";
 const char* mqtt_password = "Mic@DTU2017!@#";
@@ -39,6 +40,7 @@ String tp_Status;
 String tp_Library;
 String tp_Request;
 String tp_Response;
+String tp_Debug;
 String tp_Terminal;
 String tp_Terminal_Hub;
 String tp_Terminal_Res;
@@ -53,13 +55,18 @@ const String on_ = "on";
 const String off_ = "off";
 
 int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
-long DATE_HAVERST_PHASE;
+//long DATE_HAVERST_PHASE;
 long SENSOR_UPDATE_INTERVAL_DEFAULT = 30000;
-bool library = true;
+bool LIBRARY = true;
 
 volatile long SENSOR_UPDATE_INTERVAL = SENSOR_UPDATE_INTERVAL_DEFAULT;
 bool skip_update_sensor_after_control = false;
 time_t t_skip_update_sensor_after_control;
+
+String mqtt_Message;
+
+WiFiClient mqtt_espClient;
+PubSubClient mqtt_client(mqtt_espClient);
 
 extern String timeStr;
 extern bool STT_PUMP_MIX, STT_FAN_MIX, STT_LIGHT;
@@ -68,15 +75,12 @@ extern void control(int pin, bool status, bool isCommandFromApp);
 extern void stm32_digitalWrite(int pin, bool status);
 extern String make_status_string_to_stm32();
 extern void send_message_to_stm32(String cmd);
+extern void send_control_message_all_to_stm32();
 extern void send_status_to_server();
 extern void set_hub_id_to_stm32(String id);
 
-String mqtt_Message;
-
-WiFiClient mqtt_espClient;
-PubSubClient mqtt_client(mqtt_espClient);
-
-void send_control_message_all_to_stm32();
+extern bool response_version();
+extern bool response_library();
 
 #pragma region parseTopic
 void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
@@ -105,28 +109,28 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	if (pump_mix_stt == on_)
 	{
 		skip_auto_pump_mix = true;
-		control(PUMP_MIX, true, isCommandFromApp);
+		control(R_PUMP_MIX, true, isCommandFromApp);
 
-		//control(PUMP_FLOOR, true, isCommandFromApp);
+		//control(R_PUMP_FLOOR, true, isCommandFromApp);
 		flag_schedule_pump_floor = true;
 	}
 	else if (pump_mix_stt == off_)
 	{
 		skip_auto_pump_mix = true;
-		control(PUMP_MIX, false, isCommandFromApp);
-		control(PUMP_FLOOR, false, isCommandFromApp);
+		control(R_PUMP_MIX, false, isCommandFromApp);
+		control(R_PUMP_FLOOR, false, isCommandFromApp);
 	}
 
 	String light_stt = commands["LIGHT"].as<String>();
 	if (light_stt == on_)
 	{
 		skip_auto_light = true;
-		control(LIGHT, true, isCommandFromApp);
+		control(R_LIGHT, true, isCommandFromApp);
 	}
 	else if (light_stt == off_)
 	{
 		skip_auto_light = true;
-		control(LIGHT, false, isCommandFromApp);
+		control(R_LIGHT, false, isCommandFromApp);
 	}
 
 	String fan_stt = commands["FAN"].as<String>();
@@ -134,15 +138,15 @@ void handleTopic__Mushroom_Commands_HubID(String mqtt_Message) {
 	{
 		skip_auto_fan_mix = true;
 		skip_auto_fan_wind = true;
-		control(FAN_MIX, true, isCommandFromApp);
-		control(FAN_WIND, true, isCommandFromApp);
+		control(R_FAN_MIX, true, isCommandFromApp);
+		control(R_FAN_WIND, true, isCommandFromApp);
 	}
 	else if (fan_stt == off_)
 	{
 		skip_auto_fan_mix = true;
 		skip_auto_fan_wind = true;
-		control(FAN_MIX, false, isCommandFromApp);
-		control(FAN_WIND, false, isCommandFromApp);
+		control(R_FAN_MIX, false, isCommandFromApp);
+		control(R_FAN_WIND, false, isCommandFromApp);
 	}
 
 	SENSOR_UPDATE_INTERVAL = 2000;
@@ -183,34 +187,36 @@ void handleTopic__Mushroom_Library_HubID(String mqtt_Message, bool save) {
 	HUMI_MIN = lib["HUMI_MIN"].as<int>();
 	LIGHT_MAX = lib["LIGHT_MAX"].as<int>();
 	LIGHT_MIN = lib["LIGHT_MIN"].as<int>();
-	DATE_HAVERST_PHASE = lib["DATE_HAVERST_PHASE"].as<long>();
+	//DATE_HAVERST_PHASE = lib["DATE_HAVERST_PHASE"].as<long>();
 
 	long interval = lib["SENSOR_UPDATE_INTERVAL"].as<long>();
 	if (interval > 0) {
 		SENSOR_UPDATE_INTERVAL_DEFAULT = interval;
 	}
-
-	String LIBRARY = lib["LIBRARY"].asString();
-	if (LIBRARY == "ENABLE") {
-		library = true;
+	
+	String library = lib["LIBRARY"].asString();
+	if (library == "ENABLE") {
+		LIBRARY = true;
 	}
-	else if (LIBRARY == "DISABLE") {
-		library = false;
+	else if (library == "DISABLE") {
+		LIBRARY = false;
 	}
 
-	DEBUG.println("TEMP_MAX : " + String(TEMP_MAX));
-	DEBUG.println("TEMP_MIN : " + String(TEMP_MIN));
-	DEBUG.println("HUMI_MAX : " + String(HUMI_MAX));
-	DEBUG.println("HUMI_MIN : " + String(HUMI_MIN));
-	DEBUG.println("LIGHT_MAX : " + String(LIGHT_MAX));
-	DEBUG.println("LIGHT_MIN : " + String(LIGHT_MIN));
-	DEBUG.println("DATE_HAVERST_PHASE : " + String(DATE_HAVERST_PHASE));
-	DEBUG.println("SENSOR_UPDATE_INTERVAL : " + String(SENSOR_UPDATE_INTERVAL_DEFAULT));
-	DEBUG.println("LIBRARY : " + LIBRARY);
-	DEBUG.println("\r\n");
+	response_library();
+	//DEBUG.println("TEMP_MAX : " + String(TEMP_MAX));
+	//DEBUG.println("TEMP_MIN : " + String(TEMP_MIN));
+	//DEBUG.println("HUMI_MAX : " + String(HUMI_MAX));
+	//DEBUG.println("HUMI_MIN : " + String(HUMI_MIN));
+	//DEBUG.println("LIGHT_MAX : " + String(LIGHT_MAX));
+	//DEBUG.println("LIGHT_MIN : " + String(LIGHT_MIN));
+	//DEBUG.println("DATE_HAVERST_PHASE : " + String(DATE_HAVERST_PHASE));
+	//DEBUG.println("SENSOR_UPDATE_INTERVAL : " + String(SENSOR_UPDATE_INTERVAL_DEFAULT));
+	//DEBUG.println("LIBRARY : " + LIBRARY);
+	//DEBUG.println("\r\n");
 }
 
 void handle_Terminal(String msg) {
+	yield();
 	if (msg == "/restart") {
 		mqtt_publish(tp_Terminal_Res, "Restarting");
 		DEBUG.println("\r\nRestart\r\n");
@@ -231,37 +237,10 @@ void handle_Terminal(String msg) {
 		DEBUG.println(("DONE!"));
 	}
 	if (msg.startsWith("/v") || msg.indexOf("/version") > -1) {
-		//StaticJsonBuffer<500> jsBuffer;
-		DynamicJsonBuffer jsBuffer(500);
-		JsonObject& jsData = jsBuffer.createObject();
-		jsData["HUB_ID"] = HubID;
-		jsData["FW Version"] = _firmwareVersion;
-
-		String data;
-		data.reserve(100);
-		jsData.printTo(data);
-		mqtt_publish(tp_Terminal_Res, data);
+		response_version();
 	}
 	else if (msg.startsWith("/l") || msg.indexOf("/library") > -1) {
-		//StaticJsonBuffer<500> jsBuffer;
-		DynamicJsonBuffer jsBuffer(500);
-		JsonObject& jsLib = jsBuffer.createObject();
-		jsLib["TEMP_MAX"] = TEMP_MAX;
-		jsLib["TEMP_MIN"] = TEMP_MIN;
-		jsLib["HUMI_MAX"] = HUMI_MAX;
-		jsLib["HUMI_MIN"] = HUMI_MIN;
-		jsLib["LIGHT_MAX"] = LIGHT_MAX;
-		jsLib["LIGHT_MIN"] = LIGHT_MIN;
-		String LIB = library ? "ENABLE" : "DISABLE";;
-		jsLib["DATE_HAVERST_PHASE"] = DATE_HAVERST_PHASE;
-		jsLib["SENSOR_UPDATE_INTERVAL"] = SENSOR_UPDATE_INTERVAL;
-		jsLib["SENSOR_UPDATE_INTERVAL_DEFAULT"] = SENSOR_UPDATE_INTERVAL_DEFAULT;
-		jsLib["LIBRARY"] = LIB;
-
-		String libs;
-		libs.reserve(500);
-		jsLib.printTo(libs);
-		mqtt_publish(tp_Terminal_Res, libs);
+		response_library();
 	}
 	else if (msg.startsWith("/set id")) {
 		String id = msg.substring(7);
@@ -295,7 +274,23 @@ int wifi_quality() {
 		return int(2 * (dBm + 100));
 }
 
+String make_json_data__mqtt_publish_when_connected() {
+	DynamicJsonBuffer jsBuffer(500);
+	JsonObject& jsData = jsBuffer.createObject();
+	jsData["HUB_ID"] = HubID;
+	jsData["STATUS"] = "ONLINE";
+	jsData["FW_VER"] = _firmwareVersion;
+	jsData["HW_VER"] = _hardwareVersion;
+	jsData["WIFI"] = WiFi.SSID();
+	jsData["SIGNAL"] = String(wifi_quality());
+
+	String buf;
+	jsData.printTo(buf);
+	return buf;
+}
+
 bool mqtt_publish(String topic, String payload, bool retain) {
+	yield();
 	if (!mqtt_client.connected()) {
 		return false;
 	}
@@ -311,10 +306,10 @@ bool mqtt_publish(String topic, String payload, bool retain) {
 		yield();
 		digitalWrite(LED_BUILTIN, OFF);
 		if (ret) {
-			DEBUG.println("OK");
+			DEBUG.println("--\r\nOK");
 		}
 		else {
-			DEBUG.println("FAIL");
+			DEBUG.println("--\r\nFAIL");
 			delay(200);
 			if (retries++ > 5) break;
 		}
@@ -349,7 +344,7 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 
 	digitalWrite(LED_BUILTIN, OFF);
 
-	//control pump_mix, light, fan
+	//control pump_mix, LIGHT, fan
 	if (topicStr == String(tp_Request))
 	{
 		handleTopic__Mushroom_Commands_HubID(mqtt_Message);
@@ -400,6 +395,16 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 		}
 	}
 
+	else if (topicStr == tp_Status) {
+		StaticJsonBuffer<500> jsonBuffer;
+		JsonObject& status = jsonBuffer.parseObject(mqtt_Message);
+		String stt = status["STATUS"].as<String>();
+		if (stt == "OFFLINE") {
+			String h_online = make_json_data__mqtt_publish_when_connected();
+			mqtt_publish((tp_Status).c_str(), h_online.c_str(), true);
+		}
+	}
+
 	else if (topicStr == tp_Light) {
 		AUTO_OFF_LIGHT = mqtt_Message.toInt();
 	}
@@ -422,21 +427,6 @@ void mqtt_callback(char* topic, uint8_t* payload, unsigned int length) {
 	//DEBUG.println("Time: " + String(t));
 }
 
-String make_json_data__mqtt_publish_when_connected() {
-	DynamicJsonBuffer jsBuffer(500);
-	JsonObject& jsData = jsBuffer.createObject();
-	jsData["HUB_ID"] = HubID;
-	jsData["STATUS"] = "ONLINE";
-	jsData["FW_VER"] = _firmwareVersion;
-	jsData["HW_VER"] = _hardwareVersion;
-	jsData["WIFI"] = WiFi.SSID();
-	jsData["SIGNAL"] = String(wifi_quality());
-
-	String buf;
-	jsData.printTo(buf);
-	return buf;
-}
-
 
 void mqtt_reconnect() {  // Loop until we're reconnected
 	if (!mqtt_client.connected()) {
@@ -449,14 +439,15 @@ void mqtt_reconnect() {  // Loop until we're reconnected
 		if (mqtt_client.connect(client_id.c_str(), mqtt_user, mqtt_password, (tp_Status).c_str(), 0, true, String("{\"HUB_ID\":\"" + HubID + "\",\"STATUS\":\"OFFLINE\"}").c_str())) {
 			DEBUG.println(("connected."));
 
+			String h_online = make_json_data__mqtt_publish_when_connected();
+			mqtt_publish((tp_Status).c_str(), h_online.c_str(), true);
+
+			mqtt_client.subscribe((tp_Status).c_str());
 			mqtt_client.subscribe((tp_Library).c_str());
 			mqtt_client.subscribe((tp_Request).c_str());
 			mqtt_client.subscribe((tp_Interval).c_str());
 			mqtt_client.subscribe((tp_Terminal_Hub).c_str());
 			mqtt_client.subscribe(tp_Terminal.c_str());
-
-			String h_online = make_json_data__mqtt_publish_when_connected();
-			mqtt_publish((tp_Status).c_str(), h_online.c_str(), true);
 		}
 		else {
 			DEBUG.print(("failed, rc="));
@@ -473,6 +464,7 @@ void mqtt_init_topics() {
 	tp_Library = "Mushroom/Library/" + HubID;
 	tp_Request = "Mushroom/Commands/REQUEST/" + HubID;
 	tp_Response = "Mushroom/Commands/RESPONSE/" + HubID;
+	tp_Debug = "Mushroom/Debug/" + HubID;
 	tp_Terminal = "Mushroom/Terminal";
 	tp_Terminal_Hub = "Mushroom/Terminal/" + HubID;
 	tp_Terminal_Res = "Mushroom/Terminal/RESPONSE/" + HubID;
@@ -482,6 +474,7 @@ void mqtt_init_topics() {
 	tp_Pump_Floor = "Mushroom/<HubID>/AUTO_OFF/PUMP_FLOOR";
 	tp_Fan_Mix = "Mushroom/<HubID>/AUTO_OFF/FAN_MIX";
 	tp_Fan_Wind = "Mushroom/<HubID>/AUTO_OFF/FAN_WIND";
+	yield();
 }
 void mqtt_init() {
 	//http.setReuse(true);
@@ -490,6 +483,7 @@ void mqtt_init() {
 	mqtt_Message.reserve(MQTT_MAX_PACKET_SIZE); //tao buffer khoang trong cho mqtt_Message
 	mqtt_client.setServer(mqtt_server, mqtt_port);
 	mqtt_client.setCallback(mqtt_callback);
+	yield();
 }
 
 void mqtt_loop() {

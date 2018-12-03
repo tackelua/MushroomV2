@@ -19,7 +19,7 @@
 #include "hardware.h"
 #include "mqtt_helper.h"
 
-#define __VERSION__	"3.1.6beta"
+#define __VERSION__	"3.1.7d4-beta"
 String _firmwareVersion = __VERSION__ " " __DATE__ " " __TIME__;
 String _hardwareVersion;
 

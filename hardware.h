@@ -21,11 +21,11 @@ extern SoftwareSerial DEBUG;
 extern String HubID;
 
 enum STM32_RELAY {
-	LIGHT = 1,
-	PUMP_MIX,
-	PUMP_FLOOR,
-	FAN_MIX,
-	FAN_WIND
+	R_LIGHT = 1,
+	R_PUMP_MIX,
+	R_PUMP_FLOOR,
+	R_FAN_MIX,
+	R_FAN_WIND
 };
 
 #define ON	HIGH 

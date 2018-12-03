@@ -91,7 +91,7 @@ res:relay-status-all|{id}|{stt1}{stt2}{stt3}{stt4}{stt5}{stt6}{stt7}...\r\n
  * @param {type} : char - kiểu của sensor
  *                        |-- t{idx}= : temperature
  *                        |-- h{idx}= : humidity
- *                        |-- l{idx}= : light
+ *                        |-- l{idx}= : LIGHT
  *                        |-- w{idx}=: water high limit
  *                        |-- w{idx}=: water low limit
  * @param {value} : float - giá trị của cảm biến

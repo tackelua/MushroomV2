@@ -1,9 +1,0 @@
-https://docs.google.com/document/d/1wSJvCkT_4DIpudjprdOUVIChQpK3V6eW5AJgY0nGKGc/edit
-
-Mushroom/Terminal
-{  
-   "Command":"FOTA",
-   "Hub_ID":"600194092C1D",
-   "Version":"",
-   "Url":"http://gith.cf/files/MushroomV2.bin"
-}

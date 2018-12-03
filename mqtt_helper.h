@@ -9,9 +9,9 @@
 #include "WProgram.h"
 #endif
 extern int TEMP_MAX, TEMP_MIN, HUMI_MAX, HUMI_MIN, LIGHT_MAX, LIGHT_MIN;
-extern long DATE_HAVERST_PHASE;
+//extern long DATE_HAVERST_PHASE;
 extern long SENSOR_UPDATE_INTERVAL_DEFAULT;
-extern bool library;
+extern bool LIBRARY;
 extern volatile long SENSOR_UPDATE_INTERVAL;
 extern bool skip_update_sensor_after_control;
 extern time_t t_skip_update_sensor_after_control;
@@ -25,6 +25,7 @@ extern String tp_Status;
 extern String tp_Library;
 extern String tp_Request;
 extern String tp_Response;
+extern String tp_Debug;
 extern String tp_Terminal;
 extern String tp_Terminal_Hub;
 extern String tp_Terminal_Res;

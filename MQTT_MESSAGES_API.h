@@ -43,9 +43,9 @@ Topic : "Mushroom/Library/<HubID>"
 		"HUMI_MIN": int,
 		"LIGHT_MAX": int,
 		"LIGHT_MIN": int,
-		"DATE_HAVERST_PHASE": long,
-		"SENSOR_UPDATE_INTERVAL_DEFAULT" : long
-		"LIBRARY": ""						//"ENABLE" for AUTOMATIC or "DISABLE"
+		//"DATE_HAVERST_PHASE": long,
+		"SENSOR_UPDATE_INTERVAL_DEFAULT" : long,
+		"LIBRARY": ""	//"ENABLE" for AUTOMATIC or "DISABLE"
 	}
 
 AUTO OFF
@@ -98,7 +98,7 @@ Topic: "Mushroom/Logs/<HubID>"
 //=======================================
 
 TERMINAL
-Topic: tp_Terminal
+Topic: "Mushroom/Terminal"
 	{
 		"Command" : "FOTA",
 		"Hub_ID" : "all",
@@ -111,6 +111,10 @@ Topic: "Mushroom/Terminal/<HubID>"
 	"/uf"
 	"/version" or "/v"
 	"/library" or "/l"
+	"id"
+	"/set id <HubID>"
+	"/reset id"
+
 
 
 #endif

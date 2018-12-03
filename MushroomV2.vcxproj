@@ -79,6 +79,9 @@
     <ProjectCapability Include="VisualMicro" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="auto_control.ino">
+      <FileType>CppCode</FileType>
+    </None>
     <None Include="functions.ino">
       <FileType>CppCode</FileType>
     </None>
@@ -104,7 +107,7 @@
     <ClCompile Include="mqtt_helper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Auto Mushroom.txt" />
+    <Text Include="Auto Mushroom.h" />
     <Text Include="STM32-ESP-Communication.txt" />
   </ItemGroup>
   <PropertyGroup>

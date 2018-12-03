@@ -23,6 +23,7 @@
     <None Include="SmartMushroomV2.pdf">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="auto_control.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.MushroomV2.vsarduino.h">
@@ -50,10 +51,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Auto Mushroom.txt">
+    <Text Include="STM32-ESP-Communication.txt">
       <Filter>Resource Files</Filter>
     </Text>
-    <Text Include="STM32-ESP-Communication.txt">
+    <Text Include="Auto Mushroom.h">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>
